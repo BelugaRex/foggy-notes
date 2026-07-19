@@ -1,0 +1,75 @@
+site_name: Foggy Notes
+site_url: https://belugarex.github.io/foggy-notes/
+site_description: 以图为主的开发工具组合、排错经验和可复现工作流
+site_author: BelugaRex
+
+repo_name: BelugaRex/foggy-notes
+repo_url: https://github.com/BelugaRex/foggy-notes
+edit_uri: ""
+
+docs_dir: .build/docs
+site_dir: .build/site
+
+theme:
+  name: material
+  language: zh
+  features:
+    - navigation.sections
+    - navigation.footer
+    - navigation.top
+    - content.code.copy
+    - toc.follow
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: blue grey
+      accent: cyan
+      toggle:
+        icon: material/weather-night
+        name: 切换到深色模式
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: blue grey
+      accent: cyan
+      toggle:
+        icon: material/weather-sunny
+        name: 切换到浅色模式
+
+nav:
+  - 首页: index.md
+  - 实操指南:
+      - Windows：从安装到 Agent 验证: Windows-VS-Code-UCP-DeepSeek-Agent-工作流.md
+  - 按需查阅:
+      - 设置 VS Code 默认模型: UCP-设置-VS-Code-默认模型.md
+      - 添加项目规则: VS-Code-Agent-项目规则.md
+      - 接入 MCP: VS-Code-Agent-接入-MCP.md
+      - 检查安全与成本: VS-Code-Agent-安全与成本.md
+      - UCP 和 DeepSeek 常见问题: UCP-DeepSeek-常见问题.md
+  - 提出问题: https://github.com/BelugaRex/foggy-notes/issues/new
+
+plugins:
+  - search
+
+markdown_extensions:
+  - attr_list
+  - md_in_html
+  - tables
+  - pymdownx.blocks.caption
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - toc:
+      permalink: true
+
+validation:
+  nav:
+    omitted_files: warn
+    not_found: warn
+  links:
+    not_found: warn
+    anchors: warn
+    unrecognized_links: warn
+
+copyright: Copyright &copy; 2026 BelugaRex

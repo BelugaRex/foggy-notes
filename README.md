@@ -1,25 +1,20 @@
 # Foggy Notes
 
-分享日常开发中真正用过、容易忘记，也值得复用的工具组合与工作流。
+一套以图为主的实操笔记，记录真正用过、容易忘记，也值得复用的工具组合与工作流。
 
-## 从这里开始
+## 从文档首页开始
 
-- [Windows 上用 VS Code + UCP + DeepSeek：操作索引](Windows-VS-Code-UCP-DeepSeek-Agent-工作流.md)
+仓库只是内容源。阅读时请直接打开：
 
-完整流程已经拆成独立小页：准备环境、接入模型、运行验证、常用配置和排错各管一件事。需要什么就查什么，不必在一篇长文里反复滚动。
+- **独立文档站**：https://belugarex.github.io/foggy-notes/
+- **GitHub Wiki 镜像**：https://github.com/BelugaRex/foggy-notes/wiki
 
-## 阅读方式
+文档首页包含平台入口、完整 Windows 实操、后续 macOS 分册、按需配置和 Issue 反馈。点进去再开始，比在仓库文件列表里寻宝轻松一些。
 
-- [通过 GitHub Wiki 按侧边栏查阅](https://github.com/BelugaRex/foggy-notes/wiki)。
-- 直接在仓库中打开 Markdown，或克隆后用 VS Code 搜索。
+## 当前进度
 
-## 有疑问
+- Windows：已提供从安装到 Agent 验证的连续图解实操。
+- macOS：准备中。
+- 图片：已放置具体图位，后续逐张补充截图和标注图。
 
-[开一个 Issue](https://github.com/BelugaRex/foggy-notes/issues/new)，写下页面、没看懂的概念，或希望看到的例子。我会据此补一篇小笔记，或继续修改现有内容。问题不用很大，小问号也算数。
-
-## 写作方式
-
-- 先给可执行步骤和验证结果，再说用途与原理。
-- 一页尽量只解决一个任务或问题。
-- 语气保持平和，允许偶尔开个不挡路的小玩笑。
-- 标注核验日期、适用版本和官方资料。
+有概念没看懂或希望补图，可以直接[开一个 Issue](https://github.com/BelugaRex/foggy-notes/issues/new)。
