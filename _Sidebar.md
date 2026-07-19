@@ -4,7 +4,7 @@
 
 ### 实操指南
 
-- [给 VS Code 搭一套顺手的 Agent 工作流](Windows-VS-Code-UCP-DeepSeek-Agent-工作流)
+- [用 Copilot Chat 搭一套顺手的 Agent 工作流](Windows-VS-Code-UCP-DeepSeek-Agent-工作流)
 
 ### 快速查阅
 

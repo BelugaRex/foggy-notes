@@ -43,7 +43,7 @@ theme:
 nav:
   - 首页: index.md
   - 实操指南:
-      - 给 VS Code 搭一套顺手的 Agent 工作流: Windows-VS-Code-UCP-DeepSeek-Agent-工作流.md
+      - 用 Copilot Chat 搭一套顺手的 Agent 工作流: Windows-VS-Code-UCP-DeepSeek-Agent-工作流.md
   - 标签索引: tags.md
   - 提出问题: https://github.com/BelugaRex/foggy-notes/issues/new
 

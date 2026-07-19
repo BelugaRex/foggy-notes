@@ -4,13 +4,15 @@ tags: [VS Code, Agent, UCP, DeepSeek]
 
 <!-- article-id: FN-001 -->
 
-# 给 VS Code 搭一套顺手的 Agent 工作流
+# 用 Copilot Chat 搭一套顺手的 Agent 工作流
 
-这份笔记的核心，是在 VS Code 里搭建一套顺手的 Agent 工作流，再通过 UCP 接入 DeepSeek 等第三方模型。
+这份笔记的核心，是在 VS Code 里使用 GitHub Copilot Chat 搭建一套顺手的 Agent 工作流，再通过 UCP 接入 DeepSeek 等第三方模型。
+
+这里说的 Agent 工作流，指的是 **Copilot Chat 里的 Agent 模式**，不是 VS Code 后来提供的另一套独立 Agent 功能。后者我个人用起来不太顺手，这篇不会展开。
 
 我日常更喜欢用这套工作流，而不是大家常用的 OpenCode、Claude 或 Codex。VS Code 能读取代码和源文件、管理项目文件结构，也能同时打开多个终端：一边看 Agent 在操作什么，一边用独立终端做自己的事。
 
-我还会用插件让 Copilot 接入第三方模型，以及一些方便的 skills 和 MCP。遇到问题时，可以直接在 Output 和日志里查找工作流的 bug 与风险。下面从头开始搭建。
+我还会用插件让 Copilot Chat 接入第三方模型，以及一些方便的 skills 和 MCP。遇到问题时，可以直接在 Output 和日志里查找工作流的 bug 与风险。下面从头开始搭建。
 
 > **Agent 补充｜阅读标记**
 >

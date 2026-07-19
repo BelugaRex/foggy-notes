@@ -9,7 +9,7 @@
 - **独立文档站**：https://belugarex.github.io/foggy-notes/
 - **GitHub Wiki 镜像**：https://github.com/BelugaRex/foggy-notes/wiki
 
-文档首页包含完整的 VS Code Agent 工作流实操、站内搜索、标签索引和 Issue 反馈。点进去再开始，比在仓库文件列表里寻宝轻松一些。
+文档首页包含完整的 Copilot Chat Agent 工作流实操、站内搜索、标签索引和 Issue 反馈。点进去再开始，比在仓库文件列表里寻宝轻松一些。
 
 ## 当前进度
 
