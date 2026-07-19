@@ -43,13 +43,7 @@ theme:
 nav:
   - 首页: index.md
   - 实操指南:
-      - Windows：从安装到 Agent 验证: Windows-VS-Code-UCP-DeepSeek-Agent-工作流.md
-  - 按需查阅:
-      - 设置 VS Code 默认模型: UCP-设置-VS-Code-默认模型.md
-      - 添加项目规则: VS-Code-Agent-项目规则.md
-      - 接入 MCP: VS-Code-Agent-接入-MCP.md
-      - 检查安全与成本: VS-Code-Agent-安全与成本.md
-      - UCP 和 DeepSeek 常见问题: UCP-DeepSeek-常见问题.md
+      - 给 VS Code 搭一套顺手的 Agent 工作流: Windows-VS-Code-UCP-DeepSeek-Agent-工作流.md
   - 标签索引: tags.md
   - 提出问题: https://github.com/BelugaRex/foggy-notes/issues/new
 

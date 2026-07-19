@@ -12,11 +12,6 @@ PAGES = {
     "Home.md": "index.md",
     "Tags.md": "tags.md",
     "Windows-VS-Code-UCP-DeepSeek-Agent-工作流.md": "Windows-VS-Code-UCP-DeepSeek-Agent-工作流.md",
-    "UCP-设置-VS-Code-默认模型.md": "UCP-设置-VS-Code-默认模型.md",
-    "VS-Code-Agent-项目规则.md": "VS-Code-Agent-项目规则.md",
-    "VS-Code-Agent-接入-MCP.md": "VS-Code-Agent-接入-MCP.md",
-    "VS-Code-Agent-安全与成本.md": "VS-Code-Agent-安全与成本.md",
-    "UCP-DeepSeek-常见问题.md": "UCP-DeepSeek-常见问题.md",
 }
 
 LINK_PATTERN = re.compile(r"(?<!!)\[([^\]]+)\]\(([^)]+)\)")

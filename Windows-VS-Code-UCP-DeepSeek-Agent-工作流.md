@@ -1,251 +1,215 @@
 ---
-tags: [Windows, VS Code, UCP, DeepSeek]
+tags: [VS Code, Agent, UCP, DeepSeek]
 ---
 
 <!-- article-id: FN-001 -->
 
-# Windows 上用 VS Code + UCP + DeepSeek 跑通 Copilot Chat Agent
+# 给 VS Code 搭一套顺手的 Agent 工作流
 
-> 目标：从一台装好 Windows 的电脑出发，在 VS Code 里接入 DeepSeek，并跑通一次会读文件、改代码、执行命令和处理错误的 Agent 工作流。
+这份笔记的核心，是在 VS Code 里搭建一套顺手的 Agent 工作流，再通过 UCP 接入 DeepSeek 等第三方模型。
 
-这套工作流的核心并不依赖 Windows；Copilot Chat、UCP、DeepSeek 和项目规则都可以跨平台使用。本篇先把 Windows 路线完整走通，macOS 版本后续单独补上。
+我日常更喜欢用这套工作流，而不是大家常用的 OpenCode、Claude 或 Codex。VS Code 能读取代码和源文件、管理项目文件结构，也能同时打开多个终端：一边看 Agent 在操作什么，一边用独立终端做自己的事。
 
-```mermaid
-flowchart LR
-    A[准备 Git 与 VS Code] --> B[安装 UCP]
-    B --> C[创建 DeepSeek Key]
-    C --> D[导入 DeepSeek]
-    D --> E[选择 Agent 与模型]
-    E --> F[运行脚本验证]
-    F --> G[检查终端输出与 Git diff]
-```
+我还会用插件让 Copilot 接入第三方模型，以及一些方便的 skills 和 MCP。遇到问题时，可以直接在 Output 和日志里查找工作流的 bug 与风险。下面从头开始搭建。
+
+> **Agent 补充｜阅读标记**
+>
+> 本页主体来自作者的实操草稿。后面由 Agent 添加的验证方法、官方依据和时效提醒，都会继续使用这种引用块，与作者正文分开。
+
+## 第 0 步：准备电脑
+
+你需要有一台电脑。当前安装步骤和截图以 Windows 为例；进入 VS Code 后，UCP、模型设置和 Chat 的操作与系统关系不大，macOS 和 Linux 可以按同样思路适配。
+
+## 第 1 步：安装 VS Code
+
+1. 如果使用 Windows 11，可以直接从[微软商店安装 VS Code](https://apps.microsoft.com/detail/XP9KHM4BK9FZ7Q?hl=zh-Hans-CN&gl=HK&ocid=pdpshare)。
+2. 安装后打开 VS Code，确认能正常进入主界面。
 
 <!-- image-id: FN-001-01 | path: images/fn-001/fn-001-01.png -->
-> [此处应有：图 FN-001-01——最终效果总览；同一张图里展示 Copilot Chat 的 Agent 模式、DeepSeek V4 Flash 模型、终端运行结果和源代码管理 diff；隐藏账号、私人路径和通知]
+![VS Code 安装后的主界面](images/fn-001/fn-001-01.png)
 
-## 准备清单
+*图 01：VS Code 安装后的主界面。*
 
-- Windows 10 或 Windows 11。
-- 一个 GitHub 账号；Copilot Free 可以完成这套接入。
-- 一个 DeepSeek 开放平台账号和少量 API 余额。
-- 能访问 GitHub、VS Code Marketplace 与 DeepSeek API 的网络环境。
-- 一个不包含敏感代码的练习目录。
+等待安装时，可以先[注册一个 GitHub 账号](https://github.com/)。
 
-## 直接照做
+确认 VS Code 能正常打开后，重启一次电脑，避免后续遇到 PATH 没有刷新的问题。
 
-### 1. 安装 Git for Windows
+## 第 2 步：安装 Git
 
-1. 打开 [Git for Windows 官方页面](https://git-scm.com/install/windows)，下载 x64 安装包。
-2. 没有特殊需求时保留默认选项并完成安装。
-3. 关闭旧 PowerShell，重新打开一个窗口。
-4. 运行：
+1. 打开 [Git for Windows 下载页](https://git-scm.com/install/windows)。
+2. 想直接下载 x64 安装包，也可以使用这个[快速下载链接](https://github.com/git-for-windows/git/releases/download/v2.55.0.windows.3/Git-2.55.0.3-64-bit.exe)。
+3. 下载完成后，保持默认选项一路点击 **Next** 即可。如果后续遇到问题，再让 Agent 帮忙调整。
+4. 安装完成后，再重启一次电脑。
 
-```powershell
-git --version
-```
+我的做法是先安装 VS Code，再安装 Git，通常不会遇到太多问题。
 
-5. 设置提交身份：
+> **Agent 补充｜确认安装成功**
+>
+> 重启后打开 PowerShell，分别运行 `code --version` 和 `git --version`。两条命令都能显示版本号，说明 VS Code 与 Git 已经进入 PATH。Git 官方下载页在 **2026-07-20** 列出的 x64 安装包版本是 `2.55.0.3`，与上面的快速下载链接一致。
 
-```powershell
-git config --global user.name "你的 GitHub 用户名"
-git config --global user.email "你的 GitHub noreply 邮箱"
-```
+## 第 3 步：登录 VS Code 并安装 UCP
+
+打开 VS Code，点击左下角的人头图标，把 GitHub 账号登录到 VS Code。登录后也可以打开设置同步。
 
 <!-- image-id: FN-001-02 | path: images/fn-001/fn-001-02.png -->
-> [此处应有：图 FN-001-02——PowerShell 中依次显示 `git --version` 和 Git 提交身份查询结果；框出版本号与 noreply 邮箱；隐藏 Windows 用户目录]
+![VS Code 左下角的 GitHub 登录入口](images/fn-001/fn-001-02.png)
 
-### 2. 安装 VS Code 并打开 Copilot Chat
+*图 02：VS Code 左下角的登录入口。*
 
-1. 打开 [VS Code 的 Windows 安装说明](https://code.visualstudio.com/docs/setup/windows)，下载 **User Setup**。
-2. 完成安装后重新打开 PowerShell。
-3. 运行：
-
-```powershell
-code --version
-```
-
-4. 打开 VS Code，点击状态栏中的 Copilot 图标。
-5. 选择 **Use AI Features**，使用 GitHub 账号登录。
-6. 没有付费订阅时，按页面提示使用 Copilot Free。
-7. 按 `Ctrl+Shift+I` 打开 Chat。
+然后点击左侧的扩展图标。
 
 <!-- image-id: FN-001-03 | path: images/fn-001/fn-001-03.png -->
-> [此处应有：图 FN-001-03——VS Code 首次打开 Copilot Chat 的界面；框出 Copilot 图标、Chat 入口、模式选择器和模型选择器；隐藏 GitHub 头像与账号名]
+![VS Code 左侧的扩展入口](images/fn-001/fn-001-03.png)
 
-到这里，`git --version` 和 `code --version` 都应能输出版本号，VS Code 也能打开 Chat。版本号出现就可以继续，暂时不用研究安装器里的每一颗螺丝。
+*图 03：VS Code 左侧的扩展入口。*
 
-### 3. 安装 Unify Chat Provider
-
-1. 按 `Ctrl+Shift+X` 打开扩展市场。
-2. 搜索 `@id:SmallMain.vscode-unify-chat-provider`。
-3. 确认扩展名称是 **Unify Chat Provider**、发布者是 **SmallMain**，然后安装。
-4. 执行 **Developer: Reload Window**。
-5. 按 `Ctrl+Shift+P`，输入 `ucp:`；能看到一组 UCP 命令就继续。
+搜索并安装 **Unify Chat Provider**。安装完成后，重启 VS Code。
 
 <!-- image-id: FN-001-04 | path: images/fn-001/fn-001-04.png -->
-> [此处应有：图 FN-001-04——VS Code 扩展市场中的 Unify Chat Provider 页面；框出扩展名、发布者 SmallMain 和安装状态]
+![VS Code 扩展市场中的 Unify Chat Provider](images/fn-001/fn-001-04.png)
 
-### 4. 创建 DeepSeek API Key
+*图 04：Unify Chat Provider 扩展。*
 
-1. 登录 [DeepSeek 开放平台](https://platform.deepseek.com/)。
-2. 查看余额并按需充值。
-3. 打开 [API Keys](https://platform.deepseek.com/api_keys)。
-4. 创建一个给 VS Code 使用的 Key，并临时复制它。
+> **Agent 补充｜核对扩展来源**
+>
+> VS Code Marketplace 中的扩展发布者是 **SmallMain**，扩展 ID 是 `SmallMain.vscode-unify-chat-provider`。截至 **2026-07-20**，公开版本为 `7.12.3`。可以在[扩展市场页面](https://marketplace.visualstudio.com/items?itemName=SmallMain.vscode-unify-chat-provider)和[项目仓库](https://github.com/smallmain/vscode-unify-chat-provider)交叉确认。
+
+## 第 4 步：申请 DeepSeek API
+
+1. 打开 [DeepSeek 开放平台](https://platform.deepseek.com/usage)。
+2. 申请或登录账号。
+3. 在页面左侧边栏充值，然后创建并复制 API Key。
+
+DeepSeek API Key 只会在创建时显示一次。如果丢失，就需要重新创建，所以可以先找个安全的地方保存。
+
+我的做法是先充值 10 元，日常使用通常比较耐用。
+
+## 第 5 步：在 UCP 中配置 DeepSeek
+
+点击 VS Code 上方的输入框，输入 `Unify Chat Provider`，选择从内置供应商列表添加供应商。这里是 UCP 预先配置好的一些模型供应商。
 
 <!-- image-id: FN-001-05 | path: images/fn-001/fn-001-05.png -->
-> [此处应有：图 FN-001-05——DeepSeek API Keys 页面；框出创建按钮和 Key 名称；实际 Key、余额、账号与其他项目全部隐藏]
+![UCP 的内置供应商入口](images/fn-001/fn-001-05.png)
 
-Key 会直接影响账户余额。后面的配置完成后清理剪贴板即可，不需要让它在桌面上拥有一个温馨的小家。
+*图 05：UCP 的内置供应商入口。*
 
-### 5. 用 UCP 添加 DeepSeek
-
-1. 打开命令面板，运行 **Unify Chat Provider: 从内置供应商列表添加供应商**。
-2. 搜索并选择 **DeepSeek**。
-3. 选择 API Key 身份验证，粘贴刚创建的 Key。
-4. 在导入页面确认配置并保存。
-
-内置配置应包含：
-
-| 字段 | 值 |
-| --- | --- |
-| API 格式 | OpenAI Chat Completion |
-| Base URL | `https://api.deepseek.com` |
-| 身份验证 | API Key |
-| 模型 | 自动拉取官方模型，并使用 UCP 内置参数 |
+输入 `DeepSeek`，选择 DeepSeek 供应商配置。
 
 <!-- image-id: FN-001-06 | path: images/fn-001/fn-001-06.png -->
-> [此处应有：图 FN-001-06——UCP 的 DeepSeek 供应商导入页；框出供应商名称、OpenAI Chat Completion、Base URL 和 API Key 认证；实际 Key 隐藏]
+![UCP 中的 DeepSeek 供应商](images/fn-001/fn-001-06.png)
 
-保存后打开 **Unify Chat Provider: 管理供应商**：
+*图 06：UCP 中的 DeepSeek 供应商。*
 
-- 能看到 DeepSeek 供应商。
-- 模型列表中有 `deepseek-v4-flash` 和 `deepseek-v4-pro`。
-- 设置文件里只有 `$UCPSECRET:...$` 引用，没有实际 Key。
+接下来按顺序操作：
 
-如果没有模型，打开 DeepSeek 的模型列表，启用 **自动拉取官方模型**，再刷新官方模型。
+1. 输入供应商名称；保持默认的 `DeepSeek` 即可，然后按回车。
+2. 粘贴刚才复制的 API Key，再按回车。
+3. 进入配置界面后点击 **保存**，然后按 `Esc`。
 
 <!-- image-id: FN-001-07 | path: images/fn-001/fn-001-07.png -->
-> [此处应有：图 FN-001-07——UCP 管理供应商与 Copilot Chat 模型选择器的并排截图；左侧框出自动拉取和刷新按钮，右侧框出 DeepSeek V4 Flash 与 V4 Pro]
+![UCP 的 DeepSeek 供应商配置界面](images/fn-001/fn-001-07.png)
 
-模型先这样选：
+*图 07：DeepSeek 供应商配置界面。*
 
-| 模型 | 先用在这里 |
-| --- | --- |
-| `deepseek-v4-flash` | 日常问答、搜索、轻量修改和高频 Agent 任务 |
-| `deepseek-v4-pro` | 复杂规划、跨文件实现和困难排错 |
-
-旧名称 `deepseek-chat` 与 `deepseek-reasoner` 将于 **2026-07-24 15:59 UTC** 弃用，新配置直接使用 V4 Flash 或 V4 Pro。
-
-### 6. 在 Copilot Chat 选择 DeepSeek
-
-1. 按 `Ctrl+Shift+I` 打开 Chat。
-2. 把会话模式切换到 **Agent**。
-3. 选择 **DeepSeek V4 Flash (DeepSeek)**。
-4. 如果模型菜单提供思考强度，先选择 `High`；困难任务再使用 `Max`。
+如果配置正确，右下角会出现一个银行卡图标。把鼠标移上去，可以看到余额情况。
 
 <!-- image-id: FN-001-08 | path: images/fn-001/fn-001-08.png -->
-> [此处应有：图 FN-001-08——Copilot Chat 顶部的模式与模型选择区域；框出 Agent、DeepSeek V4 Flash 和 High；隐藏账号信息]
+![UCP 显示的 DeepSeek 余额](images/fn-001/fn-001-08.png)
 
-### 7. 跑一次真正的 Agent 验证
+*图 08：UCP 显示的 DeepSeek 余额。*
 
-新建一个空目录，在 VS Code 终端中运行：
+## 第 6 步：修改两个 VS Code 设置
 
-```powershell
-git init
-code .
-```
+VS Code 更新后，还需要多改两个设置。
 
-在 Agent 会话中发送：
-
-> 请先检查当前工作区并给出简短计划。然后创建一个 `hello-agent.ps1`：接受 `-Name` 参数，输出带当前时间的问候语。运行 `./hello-agent.ps1 -Name Foggy` 验证；如果失败就修复。最后总结修改内容和验证结果。
-
-逐次查看文件修改和终端动作，任务结束后打开源代码管理视图看 diff。
+在设置里搜索 `chat.utilityModel`，把两个模型都改成 DeepSeek V4 Pro。
 
 <!-- image-id: FN-001-09 | path: images/fn-001/fn-001-09.png -->
-> [此处应有：图 FN-001-09——Agent 会话中的完整动作链；用编号标出读取工作区、创建文件、运行脚本、根据错误修复四个阶段；隐藏本机路径]
+![VS Code 中的 chat.utilityModel 设置](images/fn-001/fn-001-09.png)
+
+*图 09：修改 Utility Model。*
+
+如果想省钱，也可以在设置里搜索 `explore agent`，启用代码研究子代理，再把模型改成 DeepSeek V4 Pro。DeepSeek V4 Flash 也可以，会更便宜、更快。
 
 <!-- image-id: FN-001-10 | path: images/fn-001/fn-001-10.png -->
-> [此处应有：图 FN-001-10——验证结果；左侧终端显示带时间的问候语，右侧源代码管理显示 `hello-agent.ps1` diff；框出最终输出和新增文件]
+![VS Code 中的 Explore Agent 设置](images/fn-001/fn-001-10.png)
 
-## 怎么确认成功
+*图 10：修改 Explore Agent 模型。*
 
-- Agent 先读取工作区，再给出简短计划。
-- 工作区出现 `hello-agent.ps1`。
-- 终端实际运行脚本，并输出带时间的问候语。
-- 如果第一次运行失败，Agent 会读取错误并继续修复。
-- 源代码管理视图能看到完整改动。
+更改浏览子模型后，将来使用比较贵的中转站模型时，仍然可以让 DeepSeek 负责浏览代码，能省下不少费用。
 
-只回一句“你好”还不算通关，毕竟聊天和干活是两回事。
+> **Agent 补充｜这两项设置有官方依据**
+>
+> UCP 项目说明列出了 `chat.utilityModel`、`chat.utilitySmallModel` 和 Explore Agent 的默认模型设置，也说明后台任务可能继续使用 Copilot 内置模型。这里修改 Utility 与 Explore，并不是截图里凭空多出来的两行设置。
 
-## 出问题先看这里
+## 开始使用
 
-### 模型选择器里没有 DeepSeek
+点击 VS Code 上方输入框旁边的 Chat 图标，打开聊天面板。
 
-重新加载窗口，在 UCP 中确认供应商已保存，再启用自动拉取并刷新模型列表。
+<!-- image-id: FN-001-11 | path: images/fn-001/fn-001-11.png -->
+![VS Code 顶部的 Chat 入口](images/fn-001/fn-001-11.png)
 
-### 返回 401
+*图 11：打开 Chat 面板。*
 
-在 DeepSeek 控制台创建新 Key，更新 UCP 身份验证，再删除旧 Key。401 通常表示 Key 无效、已删除或复制时带入了多余字符。
+聊天面板可以按自己的习惯拖到另一侧。我更喜欢放在左边。
 
-### 能聊天，但不能调用工具
+在聊天栏底部打开模型选择器，先选择 DeepSeek V4 Flash，验证是否已经正常连接。
 
-确认当前是 **Agent** 模式，使用 V4 Flash 或 V4 Pro，并在 UCP 中同步最新内置参数。
+<!-- image-id: FN-001-12 | path: images/fn-001/fn-001-12.png -->
+![Copilot Chat 中的 DeepSeek 模型选择器](images/fn-001/fn-001-12.png)
 
-### 请求很慢或出现 429
+*图 12：切换到 DeepSeek V4 Flash。*
 
-把思考强度从 `Max` 调到 `High`，减少并行会话并稍后重试。更多现象集中在[常见问题页](UCP-DeepSeek-常见问题)。
+输入一些内容试试看。只要 DeepSeek 正常回复，基本上就没有问题了。
 
-## 跑通后按需查
+<!-- image-id: FN-001-13 | path: images/fn-001/fn-001-13.png -->
+![DeepSeek 在 Copilot Chat 中的连通性测试](images/fn-001/fn-001-13.png)
 
-- [设置 VS Code 默认模型](UCP-设置-VS-Code-默认模型)：让 Utility、Explore、Plan 等后台任务也使用预期模型。
-- [给 Agent 添加项目规则](VS-Code-Agent-项目规则)：固定项目命令、目录职责、边界和完成标准。
-- [给 Agent 接入 MCP](VS-Code-Agent-接入-MCP)：连接浏览器、数据库、工单等外部能力。
-- [检查安全与成本](VS-Code-Agent-安全与成本)：开始任务前快速检查 Key、上下文、权限和模型费用。
-- [处理 UCP 和 DeepSeek 常见问题](UCP-DeepSeek-常见问题)：按 401、无模型、无工具和 429 等现象查阅。
+*图 13：实际测试结果。*
 
-这些页面都属于按需内容，不影响从安装走到第一次 Agent 验证。
+## 按需添加 NVIDIA NIM 免费模型
 
-## 这套组合做了什么
+上面是内置模型供应商的配置。除了 DeepSeek，我个人还推荐 [NVIDIA NIM 模型平台](https://build.nvidia.com/models)：可以免费使用，不过速度比较慢。
 
-```mermaid
-flowchart LR
-    U[你] --> H[GitHub Copilot Chat\nAgent harness]
-    H --> L[VS Code Language Model API]
-    L --> P[Unify Chat Provider]
-    P --> D[DeepSeek API]
-    H --> T[文件、搜索、终端、Git、MCP 工具]
-    I[项目规则 / agents / skills] --> H
-```
+NVIDIA NIM 的模型很多，但不是每个都好用。下面是我在 **2026-07-20** 暂时使用的配置。
 
-| 层 | 负责什么 |
-| --- | --- |
-| DeepSeek | 理解任务、推理并决定下一步动作 |
-| UCP | 保存供应商配置，把模型请求发送到 DeepSeek API |
-| Copilot Chat | 组织 Agent 循环并调用工具 |
-| VS Code | 展示修改、运行命令、连接 Git 和调试器 |
-| 项目配置 | 保存 instructions、custom agents、skills 和 hooks |
+前面的步骤基本一样：在 UCP 的内置供应商里选择 NVIDIA，输入 API Key，然后按回车。
 
-UCP 在这里是模型提供者，不是另一套 Agent 框架。换模型不会拿走 Copilot Chat 原有的 Agent 模式和工具体系。
+接着点击 **从官方模型列表添加**。
 
-## Windows 与其他平台的边界
+<!-- image-id: FN-001-14 | path: images/fn-001/fn-001-14.png -->
+![NVIDIA 供应商中的官方模型列表入口](images/fn-001/fn-001-14.png)
 
-这篇里真正属于 Windows 的部分主要是安装包、PowerShell 命令和路径格式。下面这些层在 macOS 上仍然成立：
+*图 14：从官方模型列表添加模型。*
 
-- Copilot Chat 负责 Agent 循环和工具界面。
-- UCP 负责接入 DeepSeek 等模型供应商。
-- DeepSeek 负责推理和工具调用决策。
-- instructions、custom agents、skills、hooks 与 MCP 继续放在 VS Code 和项目里。
+在列表中勾选模型，然后点击确认。我暂时只推荐图中这些模型。
 
-后续 macOS 分册会保留一条从安装到验证的完整路径，而不是让读者在 Windows 页面里自己做系统翻译。
+<!-- image-id: FN-001-15 | path: images/fn-001/fn-001-15.png -->
+![NVIDIA NIM 的官方模型列表](images/fn-001/fn-001-15.png)
 
-## 官方资料
+*图 15：NVIDIA NIM 模型列表。*
 
-- [VS Code：在 Windows 上安装](https://code.visualstudio.com/docs/setup/windows)
-- [VS Code：设置 GitHub Copilot](https://code.visualstudio.com/docs/setup/copilot)
-- [Git for Windows](https://git-scm.com/install/windows)
-- [Unify Chat Provider 扩展市场](https://marketplace.visualstudio.com/items?itemName=SmallMain.vscode-unify-chat-provider)
-- [Unify Chat Provider 项目说明](https://github.com/smallmain/vscode-unify-chat-provider)
-- [DeepSeek API 文档](https://api-docs.deepseek.com/)
-- [DeepSeek API 定价](https://api-docs.deepseek.com/quick_start/pricing)
+NVIDIA NIM 还需要调整供应商配置。先点击 **供应商配置**。
 
-最后核验：**2026-07-19**，使用 **Unify Chat Provider 7.12.4**。UCP 7.12.4 要求 VS Code 1.104.0 或更新版本。
+<!-- image-id: FN-001-16 | path: images/fn-001/fn-001-16.png -->
+![UCP 中的 NVIDIA 供应商配置入口](images/fn-001/fn-001-16.png)
+
+*图 16：打开 NVIDIA 供应商配置。*
+
+选择 **网络设置**。
+
+<!-- image-id: FN-001-17 | path: images/fn-001/fn-001-17.png -->
+![NVIDIA 供应商配置中的网络设置](images/fn-001/fn-001-17.png)
+
+*图 17：打开网络设置。*
+
+按照下图调整 **连接超时**、**响应超时** 和 **最大重试次数**。完成后返回供应商配置，再返回供应商页面并点击保存，最后按 `Esc`，就可以开始使用 NVIDIA NIM 模型了。
+
+<!-- image-id: FN-001-18 | path: images/fn-001/fn-001-18.png -->
+![NVIDIA NIM 的连接超时与重试设置](images/fn-001/fn-001-18.png)
+
+*图 18：调整连接超时、响应超时和最大重试次数。*
+
+> **Agent 补充｜时效提醒**
+>
+> Git 安装包、UCP 版本、DeepSeek 模型和 NVIDIA NIM 模型列表都可能更新。本页外部入口最后核验于 **2026-07-20**；如果界面名称变化，可以优先按页面中的关键词搜索。
