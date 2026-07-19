@@ -2,6 +2,17 @@
 
 > 目标：按现象直接找到处理顺序；每一项先给操作，再解释原因。
 
+```mermaid
+flowchart TD
+	S{看到什么现象？}
+	S -->|模型列表为空| M[重新加载、确认供应商、刷新模型]
+	S -->|401| K[更新 API Key]
+	S -->|能聊天但无工具| T[切到 Agent 并同步工具参数]
+	S -->|慢或 429| R[降低思考强度、减少并发、稍后重试]
+	S -->|换电脑后无 Key| N[在新设备重新输入 Key]
+	S -->|Copilot 额度仍减少| U[调整 Utility 与 Explore 默认模型]
+```
+
 ## 模型选择器里没有 DeepSeek
 
 1. 执行 **Developer: Reload Window**。

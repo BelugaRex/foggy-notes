@@ -2,6 +2,15 @@
 
 > 目标：让 Agent 每次进入项目时都知道技术栈、常用命令、文件边界和完成标准。
 
+```mermaid
+flowchart LR
+   I[项目 instructions] --> P[Planner：读取与规划]
+   P --> H{人工确认计划}
+   H --> E[Implementer：编辑与验证]
+   E --> R[Reviewer：检查 diff]
+   R --> D{接受或继续修改}
+```
+
 ## 直接照做
 
 1. 在 Chat 中输入 `/init`。

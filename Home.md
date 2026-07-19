@@ -2,7 +2,14 @@
 
 > 记录亲自用过的工具组合、排错经验和可复现工作流，也分享给刚好需要它的人。
 
-> [此处应有：图 01——Foggy Notes 封面图；中心是 VS Code Copilot Chat Agent 工作流，左右分别标出 Windows 已发布、macOS 准备中，背景尽量简洁]
+```mermaid
+flowchart LR
+	H[Foggy Notes 首页] --> W[Windows 完整实操]
+	H -. 后续补充 .-> M[macOS 完整实操]
+	W --> R[按需配置与排错]
+	M --> R
+	R --> Q[Issue：概念疑问与补图建议]
+```
 
 ## 从平台开始
 

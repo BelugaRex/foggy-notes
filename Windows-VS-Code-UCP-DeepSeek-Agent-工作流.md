@@ -4,6 +4,16 @@
 
 这套工作流的核心并不依赖 Windows；Copilot Chat、UCP、DeepSeek 和项目规则都可以跨平台使用。本篇先把 Windows 路线完整走通，macOS 版本后续单独补上。
 
+```mermaid
+flowchart LR
+    A[准备 Git 与 VS Code] --> B[安装 UCP]
+    B --> C[创建 DeepSeek Key]
+    C --> D[导入 DeepSeek]
+    D --> E[选择 Agent 与模型]
+    E --> F[运行脚本验证]
+    F --> G[检查终端输出与 Git diff]
+```
+
 > [此处应有：图 01——最终效果总览；同一张图里展示 Copilot Chat 的 Agent 模式、DeepSeek V4 Flash 模型、终端运行结果和源代码管理 diff；隐藏账号、私人路径和通知]
 
 ## 准备清单

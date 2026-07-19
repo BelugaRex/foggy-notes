@@ -2,6 +2,16 @@
 
 > 目标：让 Utility、Explore、Plan 等后台任务也使用你选定的模型，减少每次手动切换。
 
+```mermaid
+flowchart TD
+	T{当前任务是什么？}
+	T -->|问答、搜索、轻量修改| F[DeepSeek V4 Flash]
+	T -->|复杂规划、跨文件实现、困难排错| P[DeepSeek V4 Pro]
+	T -->|需要理解图片| V[另选支持视觉的模型]
+	F --> H[思考强度先用 High]
+	P --> M[需要时再用 Max]
+```
+
 ## 直接照做
 
 1. 按 `Ctrl+Shift+P` 打开命令面板。
