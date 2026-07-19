@@ -1,4 +1,4 @@
-## Foggy Note
+## Foggy Notes
 
 - [首页](Home)
 - [VS Code 小技巧](VS-Code-小技巧)
