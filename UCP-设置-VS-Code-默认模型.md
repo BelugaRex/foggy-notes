@@ -1,3 +1,12 @@
+---
+tags:
+  - VS Code
+  - UCP
+  - 模型配置
+---
+
+<!-- article-id: FN-002 -->
+
 # 用 UCP 设置 VS Code 默认模型
 
 > 目标：让 Utility、Explore、Plan 等后台任务也使用你选定的模型，减少每次手动切换。
@@ -17,7 +26,8 @@ flowchart TD
 1. 按 `Ctrl+Shift+P` 打开命令面板。
 2. 运行 **Unify Chat Provider: 更改 VS Code 默认模型**。
 
-> [此处应有：图 01——VS Code 命令面板中搜索“更改 VS Code 默认模型”；框出 UCP 命令名称和扩展来源]
+<!-- image-id: FN-002-01 | path: images/fn-002/fn-002-01.png -->
+> [此处应有：图 FN-002-01——VS Code 命令面板中搜索“更改 VS Code 默认模型”；框出 UCP 命令名称和扩展来源]
 
 3. 先按下面这组分配：
 
@@ -29,7 +39,8 @@ flowchart TD
 4. 遇到复杂规划、跨文件修改或困难排错时，在当前会话手动切换到 `deepseek-v4-pro`。
 5. 图片理解另选支持视觉的模型；DeepSeek V4 当前是文本模型。
 
-> [此处应有：图 02——UCP 默认模型分配界面；框出 Utility、Explore、Plan 和 Implement 对应的 deepseek-v4-flash；隐藏账号信息]
+<!-- image-id: FN-002-02 | path: images/fn-002/fn-002-02.png -->
+> [此处应有：图 FN-002-02——UCP 默认模型分配界面；框出 Utility、Explore、Plan 和 Implement 对应的 deepseek-v4-flash；隐藏账号信息]
 
 ## 怎么确认成功
 

@@ -1,3 +1,12 @@
+---
+tags:
+  - Agent
+  - 安全
+  - 成本
+---
+
+<!-- article-id: FN-005 -->
+
 # 检查 VS Code Agent 的安全与成本
 
 > 目标：在开始任务前用一分钟确认代码快照、Key、上下文、工具权限和模型成本。
@@ -20,7 +29,8 @@ flowchart LR
 - [ ] 终端和 MCP 的写入动作仍在可见的审批范围内。
 - [ ] 使用 V4 Pro、长上下文或 `Max` 思考强度前，已看过余额和任务规模。
 
-> [此处应有：图 01——UCP 管理供应商页面中的 DeepSeek 配置；框出 `$UCPSECRET:...$` 引用和 Secret Storage 提示；实际 Key、账号和余额隐藏]
+<!-- image-id: FN-005-01 | path: images/fn-005/fn-005-01.png -->
+> [此处应有：图 FN-005-01——UCP 管理供应商页面中的 DeepSeek 配置；框出 `$UCPSECRET:...$` 引用和 Secret Storage 提示；实际 Key、账号和余额隐藏]
 
 任务结束后：
 
@@ -36,7 +46,8 @@ flowchart LR
 | 复杂规划、跨文件实现、困难排错 | V4 Pro；需要时再用 `Max` |
 | 图片理解 | 另选支持视觉的模型 |
 
-> [此处应有：图 02——DeepSeek 模型选择器与开放平台余额页的组合图；框出 V4 Flash、V4 Pro、思考强度和充值入口；隐藏实际余额与账号]
+<!-- image-id: FN-005-02 | path: images/fn-005/fn-005-02.png -->
+> [此处应有：图 FN-005-02——DeepSeek 模型选择器与开放平台余额页的组合图；框出 V4 Flash、V4 Pro、思考强度和充值入口；隐藏实际余额与账号]
 
 ## 这些检查分别在管什么
 

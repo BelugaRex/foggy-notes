@@ -1,3 +1,12 @@
+---
+tags:
+   - VS Code
+   - Agent
+   - 项目规则
+---
+
+<!-- article-id: FN-003 -->
+
 # 给 VS Code Agent 添加项目规则
 
 > 目标：让 Agent 每次进入项目时都知道技术栈、常用命令、文件边界和完成标准。
@@ -16,7 +25,8 @@ flowchart LR
 1. 在 Chat 中输入 `/init`。
 2. 检查生成的 `.github/copilot-instructions.md`，保留项目事实，删掉空泛口号。
 
-> [此处应有：图 01——VS Code 资源管理器与编辑器并排显示 `.github/copilot-instructions.md`；框出文件路径、构建命令和验证要求；隐藏私人项目名]
+<!-- image-id: FN-003-01 | path: images/fn-003/fn-003-01.png -->
+> [此处应有：图 FN-003-01——VS Code 资源管理器与编辑器并排显示 `.github/copilot-instructions.md`；框出文件路径、构建命令和验证要求；隐藏私人项目名]
 
 3. 至少写清楚这些内容：
    - 项目技术栈和目录职责。
@@ -30,7 +40,8 @@ flowchart LR
    - Reviewer：读取 diff，检查正确性、安全和回归风险。
 5. 需要人工检查点时，用 handoff 串起“规划 → 实现 → 审查”。
 
-> [此处应有：图 02——Copilot Chat 的 custom agent 选择器；展示 Planner、Implementer、Reviewer 和 handoff；框出各角色的工具差异]
+<!-- image-id: FN-003-02 | path: images/fn-003/fn-003-02.png -->
+> [此处应有：图 FN-003-02——Copilot Chat 的 custom agent 选择器；展示 Planner、Implementer、Reviewer 和 handoff；框出各角色的工具差异]
 
 ## 怎么确认成功
 

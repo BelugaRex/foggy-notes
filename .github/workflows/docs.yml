@@ -7,8 +7,10 @@ on:
     paths:
       - "*.md"
       - "images/**"
+      - "stylesheets/**"
       - "mkdocs.yml"
       - "requirements-docs.txt"
+      - "scripts/list_image_tasks.py"
       - "scripts/prepare_site.py"
       - ".github/workflows/docs.yml"
   workflow_dispatch:
@@ -34,6 +36,8 @@ jobs:
         run: pip install -r requirements-docs.txt
       - name: Prepare documentation sources
         run: python scripts/prepare_site.py
+      - name: Validate image task metadata
+        run: python scripts/list_image_tasks.py
       - name: Validate documentation build
         run: mkdocs build --strict
       - name: Configure Git credentials

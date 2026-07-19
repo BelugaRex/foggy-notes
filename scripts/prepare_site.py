@@ -10,6 +10,7 @@ OUTPUT = ROOT / ".build" / "docs"
 
 PAGES = {
     "Home.md": "index.md",
+    "Tags.md": "tags.md",
     "Windows-VS-Code-UCP-DeepSeek-Agent-工作流.md": "Windows-VS-Code-UCP-DeepSeek-Agent-工作流.md",
     "UCP-设置-VS-Code-默认模型.md": "UCP-设置-VS-Code-默认模型.md",
     "VS-Code-Agent-项目规则.md": "VS-Code-Agent-项目规则.md",
@@ -19,6 +20,9 @@ PAGES = {
 }
 
 LINK_PATTERN = re.compile(r"(?<!!)\[([^\]]+)\]\(([^)]+)\)")
+FRONT_MATTER_PATTERN = re.compile(
+    r"\A---\r?\n(?P<body>.*?)\r?\n---(?:\r?\n|\Z)", re.DOTALL
+)
 
 
 def rewrite_link(match: re.Match[str]) -> str:
@@ -41,6 +45,14 @@ def rewrite_link(match: re.Match[str]) -> str:
     return f"[{label}]({rewritten})"
 
 
+def validate_front_matter(source_name: str, content: str) -> None:
+    front_matter_match = FRONT_MATTER_PATTERN.match(content)
+    if front_matter_match and "\t" in front_matter_match.group("body"):
+        raise ValueError(
+            f"{source_name}: YAML front matter must use spaces instead of tabs"
+        )
+
+
 def prepare_site() -> None:
     if OUTPUT.exists():
         shutil.rmtree(OUTPUT)
@@ -52,12 +64,14 @@ def prepare_site() -> None:
             raise FileNotFoundError(f"Missing documentation source: {source_name}")
 
         content = source.read_text(encoding="utf-8")
+        validate_front_matter(source_name, content)
         content = LINK_PATTERN.sub(rewrite_link, content)
         (OUTPUT / output_name).write_text(content, encoding="utf-8")
 
-    images = ROOT / "images"
-    if images.is_dir():
-        shutil.copytree(images, OUTPUT / "images")
+    for asset_directory in ("images", "stylesheets"):
+        source = ROOT / asset_directory
+        if source.is_dir():
+            shutil.copytree(source, OUTPUT / asset_directory)
 
     print(f"Prepared {len(PAGES)} pages in {OUTPUT}")
 

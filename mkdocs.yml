@@ -10,6 +10,9 @@ edit_uri: ""
 docs_dir: .build/docs
 site_dir: .build/site
 
+extra_css:
+  - stylesheets/extra.css
+
 theme:
   name: material
   language: zh
@@ -18,6 +21,8 @@ theme:
     - navigation.footer
     - navigation.top
     - content.code.copy
+    - search.highlight
+    - search.suggest
     - toc.follow
   palette:
     - media: "(prefers-color-scheme: light)"
@@ -45,10 +50,15 @@ nav:
       - 接入 MCP: VS-Code-Agent-接入-MCP.md
       - 检查安全与成本: VS-Code-Agent-安全与成本.md
       - UCP 和 DeepSeek 常见问题: UCP-DeepSeek-常见问题.md
+  - 标签索引: tags.md
   - 提出问题: https://github.com/BelugaRex/foggy-notes/issues/new
 
 plugins:
-  - search
+  - search:
+      lang:
+        - zh
+        - en
+  - tags
 
 markdown_extensions:
   - attr_list

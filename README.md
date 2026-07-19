@@ -9,7 +9,7 @@
 - **独立文档站**：https://belugarex.github.io/foggy-notes/
 - **GitHub Wiki 镜像**：https://github.com/BelugaRex/foggy-notes/wiki
 
-文档首页包含平台入口、完整 Windows 实操、后续 macOS 分册、按需配置和 Issue 反馈。点进去再开始，比在仓库文件列表里寻宝轻松一些。
+文档首页包含平台入口、完整 Windows 实操、后续 macOS 分册、站内搜索、标签索引、按需配置和 Issue 反馈。点进去再开始，比在仓库文件列表里寻宝轻松一些。
 
 ## 当前进度
 
