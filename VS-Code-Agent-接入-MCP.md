@@ -1,8 +1,5 @@
 ---
-tags:
-  - VS Code
-  - Agent
-  - MCP
+tags: [VS Code, Agent, MCP]
 ---
 
 <!-- article-id: FN-004 -->

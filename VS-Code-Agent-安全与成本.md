@@ -1,8 +1,5 @@
 ---
-tags:
-  - Agent
-  - 安全
-  - 成本
+tags: [Agent, 安全, 成本]
 ---
 
 <!-- article-id: FN-005 -->

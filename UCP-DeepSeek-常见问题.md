@@ -1,8 +1,5 @@
 ---
-tags:
-  - UCP
-  - DeepSeek
-  - 排错
+tags: [UCP, DeepSeek, 排错]
 ---
 
 <!-- article-id: FN-006 -->

@@ -1,8 +1,5 @@
 ---
-tags:
-   - VS Code
-   - Agent
-   - 项目规则
+tags: [VS Code, Agent, 项目规则]
 ---
 
 <!-- article-id: FN-003 -->

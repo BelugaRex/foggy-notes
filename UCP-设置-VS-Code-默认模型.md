@@ -1,8 +1,5 @@
 ---
-tags:
-  - VS Code
-  - UCP
-  - 模型配置
+tags: [VS Code, UCP, 模型配置]
 ---
 
 <!-- article-id: FN-002 -->

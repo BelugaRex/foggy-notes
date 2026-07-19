@@ -1,9 +1,5 @@
 ---
-tags:
-    - Windows
-    - VS Code
-    - UCP
-    - DeepSeek
+tags: [Windows, VS Code, UCP, DeepSeek]
 ---
 
 <!-- article-id: FN-001 -->
