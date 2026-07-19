@@ -120,29 +120,27 @@ DeepSeek API Key 只会在创建时显示一次。如果丢失，就需要重新
 
 *图 08：UCP 显示的 DeepSeek 余额。*
 
-## 第 6 步：修改两个 VS Code 设置
+## 第 6 步：把三个后台模型切到 DeepSeek
 
-VS Code 更新后，还需要多改两个设置。
+VS Code 更新后，还需要改三个后台模型：Utility Model、Utility Small Model 和 Explore Agent 使用的模型。
 
-在设置里搜索 `chat.utilityModel`，把两个模型都改成 DeepSeek V4 Pro。
+在设置里搜索 `chat.utilityModel`，把 `chat.utilityModel` 和 `chat.utilitySmallModel` 都改成 DeepSeek V4 Pro。
 
 <!-- image-id: FN-001-09 | path: images/fn-001/fn-001-09.png -->
-![VS Code 中的 chat.utilityModel 设置](images/fn-001/fn-001-09.png)
+![VS Code 中的 Utility Model 和 Utility Small Model 设置](images/fn-001/fn-001-09.png)
 
-*图 09：修改 Utility Model。*
+*图 09：修改 Utility Model 和 Utility Small Model。*
 
-如果想省钱，也可以在设置里搜索 `explore agent`，启用代码研究子代理，再把模型改成 DeepSeek V4 Pro。DeepSeek V4 Flash 也可以，会更便宜、更快。
+在这套配置里，如果这两项不改，Utility 任务就无法使用第三方供应商的模型，只会继续使用 GitHub Copilot 订阅，带来额外开支。
+
+接着在设置里搜索 `explore agent`，启用代码研究子代理，再把 Explore Agent 的模型改成 DeepSeek V4 Pro。DeepSeek V4 Flash 也可以，会更便宜、更快。
 
 <!-- image-id: FN-001-10 | path: images/fn-001/fn-001-10.png -->
 ![VS Code 中的 Explore Agent 设置](images/fn-001/fn-001-10.png)
 
 *图 10：修改 Explore Agent 模型。*
 
-更改浏览子模型后，将来使用比较贵的中转站模型时，仍然可以让 DeepSeek 负责浏览代码，能省下不少费用。
-
-> **Agent 补充｜这两项设置有官方依据**
->
-> UCP 项目说明列出了 `chat.utilityModel`、`chat.utilitySmallModel` 和 Explore Agent 的默认模型设置，也说明后台任务可能继续使用 Copilot 内置模型。这里修改 Utility 与 Explore，并不是截图里凭空多出来的两行设置。
+Explore Agent 的模型不改时，浏览代码仍会使用 GitHub Copilot 订阅，同样会带来额外开支。把它切到 DeepSeek 后，将来主会话使用比较贵的中转站模型时，仍然可以让 DeepSeek 负责浏览代码，能省下不少费用。
 
 ## 开始使用
 
