@@ -261,12 +261,12 @@ body {
 
   .md-sidebar--primary .md-sidebar__scrollwrap {
     margin: 0;
-    padding: 0.85rem 0.6rem 1.1rem;
+    padding: 1rem 0.75rem 1.25rem;
   }
 
   .md-sidebar--primary .md-sidebar__inner::before {
     display: block;
-    margin: 0 0.45rem 0.6rem;
+    margin: 0 0.55rem 0.85rem;
     color: var(--fog-muted);
     font-size: 0.62rem;
     font-weight: 650;
@@ -274,9 +274,15 @@ body {
     content: "全站导航";
   }
 
+  .md-sidebar--primary .md-nav__title {
+    margin: 0 0.35rem 0.55rem;
+  }
+
   .md-sidebar--primary .md-nav__link {
-    margin-block: 0.08rem;
-    padding: 0.35rem 0.5rem;
+    box-sizing: border-box;
+    margin-block: 0.14rem;
+    margin-inline: 0.2rem;
+    padding: 0.42rem 0.6rem;
     border-left: 2px solid transparent;
     border-radius: var(--fog-radius-sm);
     transition: background-color 120ms ease, color 120ms ease, border-color 120ms ease;
@@ -299,14 +305,19 @@ body {
   }
 
   .md-sidebar--secondary .md-sidebar__scrollwrap {
-    padding-left: 0.75rem;
+    padding: 0.9rem 0.65rem 1.25rem 1rem;
   }
 
   .md-sidebar--secondary .md-nav__title {
+    display: block;
+    margin: 0 0.2rem 0.65rem;
+    padding: 0.15rem 0.35rem;
     color: var(--fog-muted);
     font-size: 0.66rem;
     font-weight: 650;
     letter-spacing: 0.04em;
+    background-color: var(--fog-surface-muted);
+    border-radius: var(--fog-radius-sm);
   }
 
   .md-sidebar--secondary .md-nav__title::before {
@@ -322,16 +333,20 @@ body {
   }
 
   .md-sidebar--secondary .md-nav__link {
-    margin-block: 0.08rem;
-    padding: 0.2rem 0.45rem;
+    box-sizing: border-box;
+    margin-block: 0.12rem;
+    margin-inline: 0.2rem;
+    padding: 0.3rem 0.55rem;
     font-size: 0.68rem;
     border-left: 1px solid transparent;
+    border-radius: var(--fog-radius-sm);
   }
 
   .md-sidebar--secondary .md-nav__link--active {
     color: var(--md-accent-fg-color);
     font-weight: 600;
-    border-left-color: var(--md-accent-fg-color);
+    background-color: var(--fog-accent-soft);
+    border-left: 2px solid var(--md-accent-fg-color);
   }
 }
 
