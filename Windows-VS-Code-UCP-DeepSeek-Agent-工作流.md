@@ -4,7 +4,7 @@ tags: [VS Code, Agent, UCP, DeepSeek]
 
 <!-- article-id: FN-001 -->
 
-# 让 Copilot 去打工：搭一套顺手的 Agent 工作流
+# 微软大战代码智能体指北
 
 这是一份用来搭建基于 VS Code 的 Copilot 来干活的工作流。我日常喜欢用这套工作流而不是大家常用的 OpenCode、Claude、Codex，因为其实这套工作流能获取更多的信息，例如阅读代码和源文件、管理项目的文件结构，还能开不同的终端，看 Agent 在操作什么，自己也能用独立的终端去操作。
 
