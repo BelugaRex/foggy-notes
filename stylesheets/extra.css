@@ -335,9 +335,21 @@ body {
   }
 }
 
+  @media screen and (max-width: 64rem) {
+    .md-content__inner {
+      padding-inline-start: max(0.8rem, env(safe-area-inset-left));
+      padding-inline-end: max(0.8rem, env(safe-area-inset-right));
+    }
+
+    .md-header__button {
+      min-width: 2.2rem;
+      min-height: 2.2rem;
+    }
+  }
+
   @media screen and (max-width: 44.9844em) {
     .md-content__inner {
-      padding: 0.9rem 0.8rem 0;
+      padding-block: 0.9rem;
     }
 
     .md-typeset h1 {
