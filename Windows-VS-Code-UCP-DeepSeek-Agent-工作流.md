@@ -12,10 +12,6 @@ tags: [VS Code, Agent, UCP, DeepSeek]
 
 这里说的 Agent 工作流，就是 Copilot Chat 里的 Agent 模式，不是 VS Code 后来提供的另一套独立 Agent 功能。后者我个人用起来不太顺手，这篇不会展开。
 
-> **Agent 补充｜阅读标记**
->
-> 本页主体来自作者的实操草稿。后面由 Agent 添加的验证方法、官方依据和时效提醒，都会继续使用这种引用块，与作者正文分开。
-
 ## 第 0 步：准备电脑
 
 你需要有一部电脑。本教程暂时从 Windows 开始，后续有需要才出 macOS 的版本（Linux 我相信你们可以自行适配的）。
