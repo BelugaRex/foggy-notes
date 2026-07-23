@@ -11,33 +11,21 @@ OUTPUT = ROOT / ".build" / "docs"
 PAGES = {
     "Home.md": "index.md",
     "Tags.md": "tags.md",
-    "Windows-VS-Code-UCP-DeepSeek-Agent-工作流.md": "Windows-VS-Code-UCP-DeepSeek-Agent-工作流.md",
+    "Windows-VS-Code-UCP-DeepSeek-Agent-工作流.md": "copilot-chat-agent-workflow.md",
 }
 
-LINK_PATTERN = re.compile(r"(?<!!)\[([^\]]+)\]\(([^)]+)\)")
+ASCII_PAGE_PATTERN = re.compile(r"(?:index|[a-z0-9]+(?:-[a-z0-9]+)*)\.md\Z")
 FRONT_MATTER_PATTERN = re.compile(
     r"\A---\r?\n(?P<body>.*?)\r?\n---(?:\r?\n|\Z)", re.DOTALL
 )
 
 
-def rewrite_link(match: re.Match[str]) -> str:
-    label, target = match.groups()
-    if target.startswith(("http://", "https://", "mailto:", "#")):
-        return match.group(0)
-
-    path, separator, fragment = target.partition("#")
-    source_name = "Home.md" if path == "Home" else f"{path}.md"
-    if path.endswith(".md"):
-        source_name = path
-
-    output_name = PAGES.get(source_name)
-    if output_name is None:
-        return match.group(0)
-
-    rewritten = output_name
-    if separator:
-        rewritten = f"{rewritten}#{fragment}"
-    return f"[{label}]({rewritten})"
+def validate_output_name(source_name: str, output_name: str) -> None:
+    if ASCII_PAGE_PATTERN.fullmatch(output_name) is None:
+        raise ValueError(
+            f"{source_name}: public page name must be lowercase ASCII kebab-case: "
+            f"{output_name}"
+        )
 
 
 def validate_front_matter(source_name: str, content: str) -> None:
@@ -54,13 +42,13 @@ def prepare_site() -> None:
     OUTPUT.mkdir(parents=True)
 
     for source_name, output_name in PAGES.items():
+        validate_output_name(source_name, output_name)
         source = ROOT / source_name
         if not source.is_file():
             raise FileNotFoundError(f"Missing documentation source: {source_name}")
 
         content = source.read_text(encoding="utf-8")
         validate_front_matter(source_name, content)
-        content = LINK_PATTERN.sub(rewrite_link, content)
         (OUTPUT / output_name).write_text(content, encoding="utf-8")
 
     for asset_directory in ("images", "stylesheets"):

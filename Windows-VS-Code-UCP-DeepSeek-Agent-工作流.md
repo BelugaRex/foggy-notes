@@ -131,6 +131,29 @@ tags: [VS Code, Agent, UCP, DeepSeek]
 
 浏览子模型的更改可以让你在之后去买中转站模型的时候，使用那些比较贵的模型的时候，还是调用 DS 去进行代码的浏览，可以大幅省钱。
 
+<strong class="step-number">3.</strong> UCP 的开发者大佬针对这个问题提供了一个更快捷的处理方式。在主界面的顶部搜索框，搜索 `Unify Chat Provider: 更改 VS Code 默认模型`。
+
+<!-- image-id: FN-001-19 | path: images/fn-001/fn-001-19.png -->
+![在 VS Code 顶部搜索 UCP 更改默认模型命令](images/fn-001/fn-001-19.png)
+
+*图 19：搜索 UCP 更改默认模型命令。*
+
+<strong class="step-number">4.</strong> 然后选择这个命令，之后会有这个列表。
+
+<!-- image-id: FN-001-20 | path: images/fn-001/fn-001-20.png -->
+![UCP 提供的三个 VS Code 默认模型设置](images/fn-001/fn-001-20.png)
+
+*图 20：UCP 提供的三个默认模型设置。*
+
+<strong class="step-number">5.</strong> 滚动到最下，点击 **更改所有内置实用模型**，然后选择 dsv4p，请仔细观察以下图片。
+
+<!-- image-id: FN-001-21 | path: images/fn-001/fn-001-21.png -->
+![从同名 DeepSeek 模型中选择 UCP 接入的官方供应商模型](images/fn-001/fn-001-21.png)
+
+*图 21：选择 UCP 接入的 DeepSeek 官方供应商模型。*
+
+你可能会和我一样有好多个 DeepSeek，因为可能是不同的供应商提供的，所以要仔细辨别。你要选的是借助 UCP 扩展接入的 DeepSeek 官方 API，获取更好的体验。
+
 ## 开始使用
 
 <strong class="step-number">1.</strong> 点击上面输入框旁边的 Chat 图标，就会显示。

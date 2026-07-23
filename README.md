@@ -4,10 +4,9 @@
 
 ## 从文档首页开始
 
-仓库只是内容源。阅读时请直接打开：
+仓库只是内容源。阅读时请直接打开独立文档站：
 
 - **独立文档站**：https://belugarex.github.io/foggy-notes/
-- **GitHub Wiki 镜像**：https://github.com/BelugaRex/foggy-notes/wiki
 
 文档首页包含完整的 Copilot Chat Agent 工作流实操、站内搜索、标签索引和 Issue 反馈。点进去再开始，比在仓库文件列表里寻宝轻松一些。
 

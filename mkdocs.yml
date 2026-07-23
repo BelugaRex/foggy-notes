@@ -16,6 +16,7 @@ extra_css:
 theme:
   name: material
   language: zh
+  font: false
   features:
     - navigation.sections
     - navigation.footer
@@ -29,21 +30,15 @@ theme:
       scheme: default
       primary: blue grey
       accent: cyan
-      toggle:
-        icon: material/weather-night
-        name: 切换到深色模式
     - media: "(prefers-color-scheme: dark)"
       scheme: slate
       primary: blue grey
       accent: cyan
-      toggle:
-        icon: material/weather-sunny
-        name: 切换到浅色模式
 
 nav:
   - 首页: index.md
   - 实操指南:
-      - 微软大战代码智能体指北: Windows-VS-Code-UCP-DeepSeek-Agent-工作流.md
+      - 微软大战代码智能体指北: copilot-chat-agent-workflow.md
   - 标签索引: tags.md
   - 提出问题: https://github.com/BelugaRex/foggy-notes/issues/new
 

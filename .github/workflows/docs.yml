@@ -9,9 +9,11 @@ on:
       - "images/**"
       - "stylesheets/**"
       - "mkdocs.yml"
+      - "VERSION"
       - "requirements-docs.txt"
       - "scripts/list_image_tasks.py"
       - "scripts/prepare_site.py"
+      - "scripts/check_hig.py"
       - ".github/workflows/docs.yml"
   workflow_dispatch:
 
@@ -25,6 +27,7 @@ concurrency:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -40,9 +43,11 @@ jobs:
         run: python scripts/list_image_tasks.py
       - name: Validate documentation build
         run: mkdocs build --strict
+      - name: Validate HIG baseline
+        run: python scripts/check_hig.py
       - name: Configure Git credentials
         run: |
           git config user.name github-actions[bot]
           git config user.email 41898282+github-actions[bot]@users.noreply.github.com
       - name: Publish to GitHub Pages
-        run: mkdocs gh-deploy --force
+        run: mkdocs gh-deploy --force --strict
