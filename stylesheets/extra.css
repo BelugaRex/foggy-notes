@@ -33,7 +33,6 @@
   --fog-header-muted: #6e6e73;
   --fog-surface: #ffffff;
   --fog-surface-muted: #f5f5f7;
-  --fog-sidebar-primary: #f5f5f7;
   --fog-border: #d2d2d7;
   --fog-border-strong: #8e8e93;
   --fog-muted: #6e6e73;
@@ -67,7 +66,6 @@
   --fog-header-muted: #aeaeb2;
   --fog-surface: #000000;
   --fog-surface-muted: #1c1c1e;
-  --fog-sidebar-primary: #1c1c1e;
   --fog-border: #38383a;
   --fog-border-strong: #636366;
   --fog-muted: #aeaeb2;
@@ -442,7 +440,7 @@ body {
 
 .md-nav__link:hover,
 .md-nav__link--active {
-  color: var(--md-accent-fg-color);
+  color: var(--md-default-fg-color);
 }
 
 @media screen and (min-width: 52.5em) {
@@ -455,11 +453,6 @@ body {
     align-items: stretch;
   }
 
-  .md-content {
-    min-width: 0;
-    border-inline: 0.05rem solid var(--fog-border);
-  }
-
   .md-sidebar--primary {
     display: block;
     position: sticky;
@@ -468,12 +461,13 @@ body {
     right: auto;
     height: calc(100vh - 2.4rem);
     margin-block: 0;
-    flex: 0 0 min(11.8rem, 18vw);
+    flex: 0 0 min(200px, 18vw);
     align-self: flex-start;
     transform: none;
     z-index: auto;
-    background-color: var(--fog-sidebar-primary);
+    background-color: var(--md-default-bg-color);
     border: 0;
+    border-inline-end: 0.05rem solid var(--fog-border);
     border-radius: 0;
     box-shadow: none;
     overflow: hidden;
@@ -489,16 +483,6 @@ body {
 
   .md-sidebar--primary label.md-nav__title {
     display: none;
-  }
-
-  .md-sidebar--primary .md-sidebar__inner::before {
-    display: block;
-    margin: 0 0.55rem 0.9rem;
-    color: var(--fog-muted);
-    font-size: 0.66rem;
-    font-weight: 600;
-    letter-spacing: 0;
-    content: "目录";
   }
 
   .md-sidebar--primary .md-nav__title {
@@ -517,14 +501,14 @@ body {
   }
 
   .md-sidebar--primary .md-nav__link:hover {
-    background-color: var(--fog-accent-soft);
+    color: var(--md-default-fg-color);
+    background-color: transparent;
   }
 
   .md-sidebar--primary .md-nav__link--active {
-    color: var(--md-accent-fg-color);
+    color: var(--md-default-fg-color);
     font-weight: 600;
     background-color: transparent;
-    border-inline-start-color: var(--md-accent-fg-color);
     border-radius: 0;
   }
 }
@@ -542,10 +526,10 @@ body {
     top: 2.4rem;
     height: calc(100vh - 2.4rem);
     margin-block: 0;
-    flex: 0 0 min(10.8rem, 16vw);
+    flex: 0 0 min(200px, 16vw);
     align-self: flex-start;
     overflow: hidden;
-    background-color: var(--fog-sidebar-primary);
+    background-color: var(--md-default-bg-color);
   }
 
   .md-sidebar--secondary .md-sidebar__scrollwrap {
@@ -553,43 +537,37 @@ body {
   }
 
   .md-sidebar--secondary .md-nav__title {
-    display: block;
-    margin: 0 0.2rem 0.65rem;
-    padding: 0.15rem 0.35rem 0.5rem;
-    color: var(--fog-muted);
-    font-size: 0.66rem;
-    font-weight: 600;
-    letter-spacing: 0.04em;
-    background-color: transparent;
-    border-bottom: 0;
-    border-radius: 0;
-  }
-
-  .md-sidebar--secondary .md-nav__title::before {
     display: none;
   }
 
   .md-sidebar--secondary .md-nav__link {
     box-sizing: border-box;
-    margin-block: 0.12rem;
+    margin-block: 0;
     margin-inline: 0.2rem;
-    padding: 0.32rem 0.55rem;
-    font-size: 0.68rem;
-    border-left: 0.1rem solid transparent;
-    border-radius: 0 var(--fog-radius-sm) var(--fog-radius-sm) 0;
+    padding: 0.125rem 0.5rem;
+    font-size: 0.6rem;
+    font-weight: 400;
+    border-left: 0.05rem solid var(--md-default-fg-color--lightest);
+    border-radius: 0;
+    transition: color 160ms ease, border-color 160ms ease;
+  }
+
+  .md-sidebar--secondary .md-nav__link:hover {
+    color: var(--md-default-fg-color);
+    background-color: transparent;
   }
 
   .md-sidebar--secondary .md-nav__link--active {
-    color: var(--md-accent-fg-color);
-    font-weight: 600;
+    color: var(--md-default-fg-color);
+    font-weight: 400;
     background-color: transparent;
-    border-left-color: var(--md-accent-fg-color);
+    border-left-color: var(--fog-border-strong);
   }
 }
 
 @media screen and (min-width: 80em) {
   .md-main__inner {
-    max-width: min(calc(100vw - 2rem), clamp(64rem, 92vw, 120rem));
+    max-width: min(calc(100vw - 2rem), clamp(64rem, 88vw, 72rem));
   }
 }
 
@@ -606,7 +584,14 @@ body {
 
   .md-nav--primary .md-nav__title {
     color: var(--md-default-fg-color);
-    background-color: var(--fog-sidebar-primary);
+    background-color: var(--md-default-bg-color);
+  }
+
+  .md-nav--primary .md-nav__link--active,
+  .md-nav--primary .md-nav__item--active > .md-nav__link {
+    color: var(--md-default-fg-color);
+    font-weight: 600;
+    background-color: transparent;
   }
 }
 

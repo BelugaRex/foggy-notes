@@ -345,16 +345,14 @@ def check_wide_layout(css: str, failures: list[str]) -> None:
         return
 
     max_width = rules.get(".md-main__inner", {}).get("max-width")
-    if max_width is None:
-        failures.append(".md-main__inner: missing wide-layout max-width")
-    else:
-        for requirement in ("clamp(", "vw", "rem", "calc(100vw"):
-            if requirement not in max_width:
-                failures.append(
-                    ".md-main__inner: wide-layout max-width must combine "
-                    "viewport growth with a readable rem cap"
-                )
-                break
+    expected_max_width = (
+        "min(calc(100vw - 2rem), clamp(64rem, 88vw, 72rem))"
+    )
+    if max_width != expected_max_width:
+        failures.append(
+            ".md-main__inner: wide layout must keep sidebars near the "
+            "reading column with a centered 72rem cap"
+        )
 
     for selector in (".md-grid", ".md-header__inner"):
         if "max-width" in rules.get(selector, {}):
@@ -379,9 +377,9 @@ def check_adaptive_sidebars(css: str, failures: list[str]) -> None:
         return
 
     primary_basis = desktop_rules.get(".md-sidebar--primary", {}).get("flex")
-    if primary_basis is None or "min(" not in primary_basis or "vw" not in primary_basis:
+    if primary_basis != "0 0 min(200px, 18vw)":
         failures.append(
-            ".md-sidebar--primary: width must adapt to viewport and text growth"
+            ".md-sidebar--primary: width must adapt below a quiet 200px cap"
         )
 
     hidden_display = hidden_rules.get(
@@ -401,25 +399,27 @@ def check_adaptive_sidebars(css: str, failures: list[str]) -> None:
         ("position", "sticky"),
         ("height", "calc(100vh - 2.4rem)"),
         ("overflow", "hidden"),
-        ("background-color", "var(--fog-sidebar-primary)"),
+        ("background-color", "var(--md-default-bg-color)"),
     ):
         if secondary.get(property_name) != expected:
             failures.append(
-                ".md-sidebar--secondary: expected a full-height control layer "
+                ".md-sidebar--secondary: expected a quiet full-height "
+                "navigation layer "
                 f"({property_name}: {expected})"
             )
     secondary_basis = secondary.get("flex")
-    if (
-        secondary_basis is None
-        or "min(" not in secondary_basis
-        or "vw" not in secondary_basis
-    ):
+    if secondary_basis != "0 0 min(200px, 16vw)":
         failures.append(
-            ".md-sidebar--secondary: width must adapt to viewport and text growth"
+            ".md-sidebar--secondary: width must adapt below a quiet 200px cap"
         )
 
 
 def check_reading_surface(css: str, failures: list[str]) -> None:
+    if "--fog-sidebar-primary" in css:
+        failures.append(
+            "extra.css: sidebars must share the default page background"
+        )
+
     first_media = css.find("@media")
     base_scope = css if first_media < 0 else css[:first_media]
     rules = parse_rules(base_scope)
@@ -465,42 +465,132 @@ def check_reading_surface(css: str, failures: list[str]) -> None:
         if property_name in header:
             failures.append(f".md-header: solid chrome must not use {property_name}")
 
+    for selector in (".md-nav__link:hover", ".md-nav__link--active"):
+        if rules.get(selector, {}).get("color") != (
+            "var(--md-default-fg-color)"
+        ):
+            failures.append(
+                f"{selector}: navigation states must use semantic gray"
+            )
+
     try:
-        desktop_rules = parse_rules(
-            extract_media_body(css, DESKTOP_LAYOUT_MEDIA)
+        desktop_rules = parse_rules(extract_media_body(css, DESKTOP_LAYOUT_MEDIA))
+        secondary_rules = parse_rules(
+            extract_media_body(css, SECONDARY_SHOW_MEDIA)
         )
     except ValueError as error:
         failures.append(str(error))
         return
     desktop_content = desktop_rules.get(".md-content", {})
-    if desktop_content.get("border-inline") != (
-        "0.05rem solid var(--fog-border)"
+    for property_name in (
+        "border-inline",
+        "border-inline-start",
+        "border-inline-end",
+        "border-left",
+        "border-right",
     ):
-        failures.append(
-            ".md-content: desktop split view needs semantic pane separators"
-        )
+        value = desktop_content.get(property_name)
+        if value not in {None, "0", "none"}:
+            failures.append(
+                ".md-content: the reading pane must not be framed on both sides"
+            )
     primary_sidebar = desktop_rules.get(".md-sidebar--primary", {})
-    if primary_sidebar.get("background-color") != "var(--fog-sidebar-primary)":
-        failures.append(
-            ".md-sidebar--primary: expected a solid navigation surface"
-        )
+    for property_name, value in (
+        ("background-color", "var(--md-default-bg-color)"),
+        ("border-inline-end", "0.05rem solid var(--fog-border)"),
+    ):
+        if primary_sidebar.get(property_name) != value:
+            failures.append(
+                ".md-sidebar--primary: expected a shared background with one "
+                f"quiet divider ({property_name}: {value})"
+            )
     primary_label = desktop_rules.get(
         ".md-sidebar--primary .md-sidebar__inner::before", {}
     )
-    if primary_label.get("content") != '"目录"':
-        failures.append(".md-sidebar--primary: expected a concise 目录 label")
+    if "content" in primary_label:
+        failures.append(
+            ".md-sidebar--primary: do not inject a redundant 目录 label"
+        )
+    primary_hover = desktop_rules.get(
+        ".md-sidebar--primary .md-nav__link:hover", {}
+    )
+    for property_name, value in (
+        ("color", "var(--md-default-fg-color)"),
+        ("background-color", "transparent"),
+    ):
+        if primary_hover.get(property_name) != value:
+            failures.append(
+                ".md-sidebar--primary: hover must remain an unfilled gray "
+                f"state ({property_name}: {value})"
+            )
     primary_active = desktop_rules.get(
         ".md-sidebar--primary .md-nav__link--active", {}
     )
     for property_name, value in (
+        ("color", "var(--md-default-fg-color)"),
+        ("font-weight", "600"),
         ("background-color", "transparent"),
-        ("border-inline-start-color", "var(--md-accent-fg-color)"),
         ("border-radius", "0"),
     ):
         if primary_active.get(property_name) != value:
             failures.append(
                 ".md-sidebar--primary: active navigation must use a plain "
-                f"text-and-rule treatment ({property_name}: {value})"
+                f"gray text treatment ({property_name}: {value})"
+            )
+    if "border-inline-start-color" in primary_active:
+        failures.append(
+            ".md-sidebar--primary: active navigation must not add an accent rule"
+        )
+
+    secondary_title = secondary_rules.get(
+        ".md-sidebar--secondary .md-nav__title", {}
+    )
+    if secondary_title.get("display") != "none":
+        failures.append(
+            ".md-sidebar--secondary: omit the redundant visible TOC title"
+        )
+    secondary_link = secondary_rules.get(
+        ".md-sidebar--secondary .md-nav__link", {}
+    )
+    for property_name, value in (
+        ("font-size", "0.6rem"),
+        ("font-weight", "400"),
+        (
+            "border-left",
+            "0.05rem solid var(--md-default-fg-color--lightest)",
+        ),
+        ("border-radius", "0"),
+    ):
+        if secondary_link.get(property_name) != value:
+            failures.append(
+                ".md-sidebar--secondary: expected a quiet tracked TOC "
+                f"({property_name}: {value})"
+            )
+    secondary_hover = secondary_rules.get(
+        ".md-sidebar--secondary .md-nav__link:hover", {}
+    )
+    for property_name, value in (
+        ("color", "var(--md-default-fg-color)"),
+        ("background-color", "transparent"),
+    ):
+        if secondary_hover.get(property_name) != value:
+            failures.append(
+                ".md-sidebar--secondary: hover must not use a filled accent "
+                f"({property_name}: {value})"
+            )
+    secondary_active = secondary_rules.get(
+        ".md-sidebar--secondary .md-nav__link--active", {}
+    )
+    for property_name, value in (
+        ("color", "var(--md-default-fg-color)"),
+        ("font-weight", "400"),
+        ("background-color", "transparent"),
+        ("border-left-color", "var(--fog-border-strong)"),
+    ):
+        if secondary_active.get(property_name) != value:
+            failures.append(
+                ".md-sidebar--secondary: active TOC links must remain gray "
+                f"and tracked ({property_name}: {value})"
             )
 
     home_action = rules.get(".md-typeset .fog-home-cta", {})
@@ -524,6 +614,35 @@ def check_reading_surface(css: str, failures: list[str]) -> None:
             failures.append(
                 ".md-content__inner: mobile reading surface must become "
                 f"edge-to-edge ({property_name}: {value})"
+            )
+
+    navigation_mobile_media = "@media screen and (max-width: 76.2344em)"
+    try:
+        navigation_mobile_rules = parse_rules(
+            extract_media_body(css, navigation_mobile_media)
+        )
+    except ValueError as error:
+        failures.append(str(error))
+        return
+    mobile_title = navigation_mobile_rules.get(
+        ".md-nav--primary .md-nav__title", {}
+    )
+    if mobile_title.get("background-color") != "var(--md-default-bg-color)":
+        failures.append(
+            ".md-nav--primary .md-nav__title: expected the default page background"
+        )
+    mobile_active = navigation_mobile_rules.get(
+        ".md-nav--primary .md-nav__item--active > .md-nav__link", {}
+    )
+    for property_name, value in (
+        ("color", "var(--md-default-fg-color)"),
+        ("font-weight", "600"),
+        ("background-color", "transparent"),
+    ):
+        if mobile_active.get(property_name) != value:
+            failures.append(
+                ".md-nav--primary: mobile active links need a plain gray "
+                f"treatment ({property_name}: {value})"
             )
 
 
@@ -769,7 +888,6 @@ def main() -> None:
         "env(safe-area-inset-left)",
         "env(safe-area-inset-right)",
         "--fog-header-bg",
-        "--fog-sidebar-primary",
         "--fog-reading-width",
     ):
         if requirement not in custom_css:
