@@ -1,0 +1,22 @@
+#!/bin/sh
+
+repo_root=$(git rev-parse --show-toplevel) || exit 2
+cd "$repo_root" || exit 2
+
+PYTHONUTF8=1
+PYTHONIOENCODING=utf-8
+export PYTHONUTF8 PYTHONIOENCODING
+
+python scripts/check_drafts.py --check
+status=$?
+
+if [ "$status" -eq 1 ]; then
+  echo >&2
+  echo "Push stopped: local human drafts still need to be synchronized." >&2
+  echo "Open Copilot Chat and ask it to sync the pending human drafts." >&2
+  echo "Use git push --no-verify only when you intentionally want to bypass this check." >&2
+elif [ "$status" -ne 0 ]; then
+  echo "Push stopped: the local draft check could not complete." >&2
+fi
+
+exit "$status"

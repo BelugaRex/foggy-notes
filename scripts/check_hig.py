@@ -10,6 +10,7 @@ from urllib.parse import unquote, urlparse
 ROOT = Path(__file__).resolve().parents[1]
 SITE = ROOT / ".build" / "site"
 CUSTOM_CSS = ROOT / "stylesheets" / "extra.css"
+GENERATED_CUSTOM_CSS = SITE / "stylesheets" / "extra.css"
 SITE_URL = "https://belugarex.github.io/foggy-notes/"
 SITE_HOST = urlparse(SITE_URL).netloc
 MINIMUM_CONTRAST = 4.5
@@ -18,6 +19,12 @@ MINIMUM_BODY_TEXT = 17.0
 MINIMUM_TOUCH_TARGET = 44.0
 MINIMUM_POINTER_TARGET = 28.0
 ASCII_ROUTE_PATTERN = re.compile(r"[a-z0-9]+(?:-[a-z0-9]+)*\Z")
+DESKTOP_LAYOUT_MEDIA = "@media screen and (min-width: 52.5em)"
+SECONDARY_HIDE_MEDIA = (
+    "@media screen and (min-width: 52.5em) and (max-width: 89.9844em)"
+)
+SECONDARY_SHOW_MEDIA = "@media screen and (min-width: 90em)"
+WIDE_LAYOUT_MEDIA = "@media screen and (min-width: 80em)"
 
 
 class PageInspector(HTMLParser):
@@ -208,23 +215,315 @@ def check_body_text_size(
         )
 
 
-def check_transparency_fallback(css: str, failures: list[str]) -> None:
-    media_query = "@media (prefers-reduced-transparency: reduce)"
+def check_generated_custom_css(css: str, failures: list[str]) -> None:
+    if not GENERATED_CUSTOM_CSS.is_file():
+        failures.append("generated extra.css is missing")
+        return
+    if GENERATED_CUSTOM_CSS.read_text(encoding="utf-8") != css:
+        failures.append(
+            "generated extra.css is stale; run prepare_site.py and rebuild"
+        )
+
+
+def check_no_glass(css: str, failures: list[str]) -> None:
+    forbidden_markers = (
+        "backdrop-filter",
+        "blur(",
+        "rgba(",
+        "hsla(",
+        "--fog-material",
+        "--fog-header-material",
+        "--fog-sidebar-material",
+    )
+    for marker in forbidden_markers:
+        if marker in css:
+            failures.append(f"extra.css: glass or translucency is forbidden: {marker}")
+
+
+def check_document_style(css: str, failures: list[str]) -> None:
+    first_media = css.find("@media")
+    base_scope = css if first_media < 0 else css[:first_media]
+    rules = parse_rules(base_scope)
+
+    expected_rules = {
+        ".md-typeset": {
+            "font-size": "0.85rem",
+            "line-height": "1.65",
+        },
+        ".md-header__title": {
+            "font-size": "0.9rem",
+            "font-weight": "600",
+        },
+        ".md-typeset h1": {
+            "padding-bottom": "0",
+            "border-bottom": "0",
+        },
+        ".md-typeset h1 + p": {
+            "color": "var(--md-default-fg-color--light)",
+            "font-size": "1.02rem",
+        },
+        ".md-typeset table:not([class])": {
+            "border-radius": "0",
+            "box-shadow": "none",
+        },
+        ".md-typeset img": {
+            "box-shadow": "none",
+        },
+        ".md-typeset .fog-home-cta": {
+            "box-shadow": "none",
+        },
+        ".md-top": {
+            "box-shadow": "none",
+        },
+        ".md-footer": {
+            "background-color": "var(--fog-surface-muted)",
+        },
+    }
+    for selector, expected in expected_rules.items():
+        declarations = rules.get(selector, {})
+        for property_name, value in expected.items():
+            if declarations.get(property_name) != value:
+                failures.append(
+                    f"{selector}: expected {property_name}: {value}"
+                )
+
+    root_blocks = extract_blocks(base_scope, ":root")
+    if len(root_blocks) != 1:
+        failures.append("extra.css: expected one :root token block")
+        return
+    radius_tokens = dict(
+        re.findall(
+            r"(--fog-radius-[a-z]+)\s*:\s*([0-9.]+rem)\s*;",
+            root_blocks[0],
+        )
+    )
+    expected_radii = {
+        "--fog-radius-sm": "0.2rem",
+        "--fog-radius-md": "0.3rem",
+        "--fog-radius-lg": "0.4rem",
+    }
+    if radius_tokens != expected_radii:
+        failures.append(
+            "extra.css: document radii must remain the 4/6/8px token scale"
+        )
+
+    expected_chrome = {
+        "default": {
+            "--fog-header-bg": "#f5f5f7",
+            "--fog-header-fg": "#1d1d1f",
+            "--fog-header-control": "#ffffff",
+            "--fog-header-control-hover": "#e8e8ed",
+            "--fog-header-border": "#d2d2d7",
+            "--fog-header-muted": "#6e6e73",
+        },
+        "slate": {
+            "--fog-header-bg": "#1d1d1f",
+            "--fog-header-fg": "#f5f5f7",
+            "--fog-header-control": "#2c2c2e",
+            "--fog-header-control-hover": "#3a3a3c",
+            "--fog-header-border": "#424245",
+            "--fog-header-muted": "#aeaeb2",
+        },
+    }
+    for scheme, expected in expected_chrome.items():
+        selector = f'[data-md-color-scheme="{scheme}"]'
+        blocks = extract_blocks(base_scope, selector)
+        if len(blocks) != 1:
+            failures.append(f"{scheme}: expected one solid chrome token block")
+            continue
+        variables = parse_color_variables(blocks[0])
+        for token, value in expected.items():
+            if variables.get(token) != value:
+                failures.append(f"{scheme}: expected {token}: {value}")
+
+
+def check_wide_layout(css: str, failures: list[str]) -> None:
     try:
-        rules = parse_rules(extract_media_body(css, media_query))
+        rules = parse_rules(extract_media_body(css, WIDE_LAYOUT_MEDIA))
     except ValueError as error:
         failures.append(str(error))
         return
 
-    for selector in (".md-header", ".md-sidebar--primary"):
-        declarations = rules.get(selector, {})
-        if "background-color" not in declarations:
-            failures.append(f"{selector}: missing reduced-transparency background")
-        if declarations.get("backdrop-filter") != "none":
-            failures.append(f"{selector}: backdrop-filter must be none when reduced")
-        if declarations.get("-webkit-backdrop-filter") != "none":
+    max_width = rules.get(".md-main__inner", {}).get("max-width")
+    if max_width is None:
+        failures.append(".md-main__inner: missing wide-layout max-width")
+    else:
+        for requirement in ("clamp(", "vw", "rem", "calc(100vw"):
+            if requirement not in max_width:
+                failures.append(
+                    ".md-main__inner: wide-layout max-width must combine "
+                    "viewport growth with a readable rem cap"
+                )
+                break
+
+    for selector in (".md-grid", ".md-header__inner"):
+        if "max-width" in rules.get(selector, {}):
             failures.append(
-                f"{selector}: -webkit-backdrop-filter must be none when reduced"
+                f"{selector}: wide layout must not stretch the shared header grid"
+            )
+
+
+def check_adaptive_sidebars(css: str, failures: list[str]) -> None:
+    try:
+        desktop_rules = parse_rules(
+            extract_media_body(css, DESKTOP_LAYOUT_MEDIA)
+        )
+        hidden_rules = parse_rules(
+            extract_media_body(css, SECONDARY_HIDE_MEDIA)
+        )
+        shown_rules = parse_rules(
+            extract_media_body(css, SECONDARY_SHOW_MEDIA)
+        )
+    except ValueError as error:
+        failures.append(str(error))
+        return
+
+    primary_basis = desktop_rules.get(".md-sidebar--primary", {}).get("flex")
+    if primary_basis is None or "min(" not in primary_basis or "vw" not in primary_basis:
+        failures.append(
+            ".md-sidebar--primary: width must adapt to viewport and text growth"
+        )
+
+    hidden_display = hidden_rules.get(
+        ".md-sidebar--secondary:not([hidden])", {}
+    ).get("display")
+    if hidden_display != "none":
+        failures.append(
+            ".md-sidebar--secondary: tertiary navigation must collapse before 90em"
+        )
+
+    secondary = shown_rules.get(".md-sidebar--secondary", {})
+    if secondary.get("display") != "block":
+        failures.append(
+            ".md-sidebar--secondary: tertiary navigation must return at 90em"
+        )
+    for property_name, expected in (
+        ("position", "sticky"),
+        ("height", "calc(100vh - 2.4rem)"),
+        ("overflow", "hidden"),
+        ("background-color", "var(--fog-sidebar-primary)"),
+    ):
+        if secondary.get(property_name) != expected:
+            failures.append(
+                ".md-sidebar--secondary: expected a full-height control layer "
+                f"({property_name}: {expected})"
+            )
+    secondary_basis = secondary.get("flex")
+    if (
+        secondary_basis is None
+        or "min(" not in secondary_basis
+        or "vw" not in secondary_basis
+    ):
+        failures.append(
+            ".md-sidebar--secondary: width must adapt to viewport and text growth"
+        )
+
+
+def check_reading_surface(css: str, failures: list[str]) -> None:
+    first_media = css.find("@media")
+    base_scope = css if first_media < 0 else css[:first_media]
+    rules = parse_rules(base_scope)
+    expected = {
+        "box-sizing": "border-box",
+        "width": "100%",
+        "max-width": "var(--fog-reading-width)",
+        "background-color": "transparent",
+        "border": "0",
+        "border-radius": "0",
+        "box-shadow": "none",
+    }
+    reading_surface = rules.get(".md-content__inner", {})
+    for property_name, value in expected.items():
+        if reading_surface.get(property_name) != value:
+            failures.append(
+                f".md-content__inner: expected {property_name}: {value}"
+            )
+
+    centered_surface = rules.get(
+        "[dir] .md-main__inner > .md-content > "
+        ".md-content__inner.md-typeset",
+        {},
+    )
+    if centered_surface.get("margin-inline") != "auto":
+        failures.append(
+            ".md-content__inner: missing high-specificity auto inline margins"
+        )
+
+    content_layer = rules.get(".md-content", {})
+    if content_layer.get("background-color") != "var(--fog-surface)":
+        failures.append(".md-content: expected a stable solid content surface")
+    for property_name in ("backdrop-filter", "-webkit-backdrop-filter"):
+        if property_name in content_layer or property_name in reading_surface:
+            failures.append(
+                f".md-content: {property_name} belongs on controls, not content"
+            )
+
+    header = rules.get(".md-header", {})
+    if header.get("background-color") != "var(--fog-header-bg)":
+        failures.append(".md-header: expected a solid header background")
+    for property_name in ("backdrop-filter", "-webkit-backdrop-filter"):
+        if property_name in header:
+            failures.append(f".md-header: solid chrome must not use {property_name}")
+
+    try:
+        desktop_rules = parse_rules(
+            extract_media_body(css, DESKTOP_LAYOUT_MEDIA)
+        )
+    except ValueError as error:
+        failures.append(str(error))
+        return
+    desktop_content = desktop_rules.get(".md-content", {})
+    if desktop_content.get("border-inline") != (
+        "0.05rem solid var(--fog-border)"
+    ):
+        failures.append(
+            ".md-content: desktop split view needs semantic pane separators"
+        )
+    primary_sidebar = desktop_rules.get(".md-sidebar--primary", {})
+    if primary_sidebar.get("background-color") != "var(--fog-sidebar-primary)":
+        failures.append(
+            ".md-sidebar--primary: expected a solid navigation surface"
+        )
+    primary_label = desktop_rules.get(
+        ".md-sidebar--primary .md-sidebar__inner::before", {}
+    )
+    if primary_label.get("content") != '"目录"':
+        failures.append(".md-sidebar--primary: expected a concise 目录 label")
+    primary_active = desktop_rules.get(
+        ".md-sidebar--primary .md-nav__link--active", {}
+    )
+    for property_name, value in (
+        ("background-color", "transparent"),
+        ("border-inline-start-color", "var(--md-accent-fg-color)"),
+        ("border-radius", "0"),
+    ):
+        if primary_active.get(property_name) != value:
+            failures.append(
+                ".md-sidebar--primary: active navigation must use a plain "
+                f"text-and-rule treatment ({property_name}: {value})"
+            )
+
+    home_action = rules.get(".md-typeset .fog-home-cta", {})
+    if home_action.get("min-height") != "2.2rem":
+        failures.append(".fog-home-cta: expected a 2.2rem minimum height")
+
+    mobile_media = "@media screen and (max-width: 44.9844em)"
+    try:
+        mobile_rules = parse_rules(extract_media_body(css, mobile_media))
+    except ValueError as error:
+        failures.append(str(error))
+        return
+    mobile_surface = mobile_rules.get(".md-content__inner", {})
+    for property_name, value in (
+        ("background-color", "transparent"),
+        ("border", "0"),
+        ("border-radius", "0"),
+        ("box-shadow", "none"),
+    ):
+        if mobile_surface.get(property_name) != value:
+            failures.append(
+                ".md-content__inner: mobile reading surface must become "
+                f"edge-to-edge ({property_name}: {value})"
             )
 
 
@@ -256,8 +555,16 @@ def check_contrast(css: str, failures: list[str]) -> None:
         ("--md-typeset-a-color", "--md-default-bg-color"),
         ("--md-accent-fg-color", "--md-default-bg-color"),
         ("--fog-muted", "--md-default-bg-color"),
+        ("--md-default-fg-color", "--fog-surface"),
+        ("--md-default-fg-color--light", "--fog-surface"),
+        ("--md-default-fg-color--lighter", "--fog-surface"),
+        ("--md-typeset-a-color", "--fog-surface"),
+        ("--md-accent-fg-color", "--fog-surface"),
+        ("--fog-muted", "--fog-surface"),
         ("--md-code-fg-color", "--md-code-bg-color"),
         ("--fog-header-fg", "--fog-header-bg"),
+        ("--fog-on-accent", "--md-accent-fg-color"),
+        ("--fog-on-accent", "--fog-accent-strong"),
     )
     increased_pairs = (
         ("--md-default-fg-color--light", "--md-default-bg-color"),
@@ -265,6 +572,12 @@ def check_contrast(css: str, failures: list[str]) -> None:
         ("--md-typeset-a-color", "--md-default-bg-color"),
         ("--md-accent-fg-color", "--md-default-bg-color"),
         ("--fog-muted", "--md-default-bg-color"),
+        ("--md-default-fg-color--light", "--fog-surface"),
+        ("--md-default-fg-color--lighter", "--fog-surface"),
+        ("--md-typeset-a-color", "--fog-surface"),
+        ("--md-accent-fg-color", "--fog-surface"),
+        ("--fog-muted", "--fog-surface"),
+        ("--fog-on-accent", "--md-accent-fg-color"),
     )
 
     first_media = css.find("@media")
@@ -442,18 +755,22 @@ def main() -> None:
     theme_css = theme_stylesheets[0].read_text(encoding="utf-8")
     failures: list[str] = []
 
+    check_generated_custom_css(custom_css, failures)
+
     for requirement in (
+        '@charset "UTF-8";',
         "color-scheme: light dark",
         "::selection",
         ":focus-visible",
         "touch-action: manipulation",
-        "backdrop-filter",
         "@media (prefers-contrast: more)",
         "@media (forced-colors: active)",
-        "@media (prefers-reduced-transparency: reduce)",
         "@media (prefers-reduced-motion: reduce)",
         "env(safe-area-inset-left)",
         "env(safe-area-inset-right)",
+        "--fog-header-bg",
+        "--fog-sidebar-primary",
+        "--fog-reading-width",
     ):
         if requirement not in custom_css:
             failures.append(f"extra.css: missing {requirement}")
@@ -463,7 +780,11 @@ def main() -> None:
     if root_pixels is not None:
         check_body_text_size(custom_css, root_pixels, failures)
         check_pointer_targets(custom_css, root_pixels, failures)
-    check_transparency_fallback(custom_css, failures)
+    check_no_glass(custom_css, failures)
+    check_document_style(custom_css, failures)
+    check_wide_layout(custom_css, failures)
+    check_adaptive_sidebars(custom_css, failures)
+    check_reading_surface(custom_css, failures)
     page_count = check_pages(failures)
     check_generated_indexes(failures)
 
@@ -474,7 +795,9 @@ def main() -> None:
 
     print(
         f"HIG baseline passed for {page_count} pages: contrast, targets, "
-        "semantics, system fonts, accessibility preferences, and ASCII URLs."
+        "semantics, system fonts, solid no-glass chrome, adaptive sidebars, "
+        "wide layout, fresh generated CSS, accessibility preferences, and "
+        "ASCII URLs."
     )
 
 
