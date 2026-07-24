@@ -21,10 +21,11 @@ MINIMUM_POINTER_TARGET = 28.0
 ASCII_ROUTE_PATTERN = re.compile(r"[a-z0-9]+(?:-[a-z0-9]+)*\Z")
 DESKTOP_LAYOUT_MEDIA = "@media screen and (min-width: 52.5em)"
 SECONDARY_HIDE_MEDIA = (
-    "@media screen and (min-width: 52.5em) and (max-width: 89.9844em)"
+    "@media screen and (min-width: 52.5em) and (max-width: 63.9844em)"
 )
-SECONDARY_SHOW_MEDIA = "@media screen and (min-width: 90em)"
-WIDE_LAYOUT_MEDIA = "@media screen and (min-width: 80em)"
+SECONDARY_SHOW_MEDIA = "@media screen and (min-width: 64em)"
+WIDE_LAYOUT_MEDIA = SECONDARY_SHOW_MEDIA
+EXPANDED_LAYOUT_MEDIA = "@media screen and (min-width: 90em)"
 
 
 class PageInspector(HTMLParser):
@@ -245,6 +246,11 @@ def check_document_style(css: str, failures: list[str]) -> None:
     base_scope = css if first_media < 0 else css[:first_media]
     rules = parse_rules(base_scope)
 
+    if "step-number" in css:
+        failures.append(
+            "extra.css: numbered instructions must use semantic ordered lists"
+        )
+
     expected_rules = {
         ".md-typeset": {
             "font-size": "0.85rem",
@@ -257,6 +263,9 @@ def check_document_style(css: str, failures: list[str]) -> None:
         ".md-typeset h1": {
             "padding-bottom": "0",
             "border-bottom": "0",
+            "hyphens": "none",
+            "overflow-wrap": "break-word",
+            "word-break": "normal",
         },
         ".md-typeset h1 + p": {
             "color": "var(--md-default-fg-color--light)",
@@ -345,14 +354,39 @@ def check_wide_layout(css: str, failures: list[str]) -> None:
         return
 
     max_width = rules.get(".md-main__inner", {}).get("max-width")
-    expected_max_width = (
-        "min(calc(100vw - 2rem), clamp(64rem, 88vw, 72rem))"
-    )
+    expected_max_width = "min(calc(100vw - 32px), 980px)"
     if max_width != expected_max_width:
         failures.append(
             ".md-main__inner: wide layout must keep sidebars near the "
-            "reading column with a centered 72rem cap"
+            "reading column with an Apple-like centered 980px cap"
         )
+
+    if rules.get(".md-main__inner", {}).get("margin-inline") != "auto":
+        failures.append(
+            ".md-main__inner: the 980px reading cluster must remain centered"
+        )
+
+    if rules.get(".md-sidebar--primary", {}).get("flex") != "0 0 200px":
+        failures.append(
+            ".md-sidebar--primary: Apple-like desktop navigation must be 200px"
+        )
+
+    reading_surface = rules.get(
+        "[dir] .md-main__inner > .md-content > "
+        ".md-content__inner.md-typeset",
+        {},
+    )
+    for property_name, value in (
+        ("max-width", "var(--fog-reading-width)"),
+        ("margin-inline", "0"),
+        ("padding-inline-start", "40px"),
+        ("padding-inline-end", "0"),
+    ):
+        if reading_surface.get(property_name) != value:
+            failures.append(
+                ".md-content__inner: expected Apple-like sidebar spacing "
+                f"({property_name}: {value})"
+            )
 
     for selector in (".md-grid", ".md-header__inner"):
         if "max-width" in rules.get(selector, {}):
@@ -397,7 +431,11 @@ def check_adaptive_sidebars(css: str, failures: list[str]) -> None:
         )
     for property_name, expected in (
         ("position", "sticky"),
-        ("height", "calc(100vh - 2.4rem)"),
+        ("top", "calc(2.4rem + var(--fog-sidebar-start))"),
+        ("height", "calc(100vh - 2.4rem - var(--fog-sidebar-start))"),
+        ("min-height", "0"),
+        ("margin-block", "var(--fog-sidebar-start) 0"),
+        ("padding-block", "0"),
         ("overflow", "hidden"),
         ("background-color", "var(--md-default-bg-color)"),
     ):
@@ -408,9 +446,33 @@ def check_adaptive_sidebars(css: str, failures: list[str]) -> None:
                 f"({property_name}: {expected})"
             )
     secondary_basis = secondary.get("flex")
-    if secondary_basis != "0 0 min(200px, 16vw)":
+    if secondary_basis != "0 0 200px":
         failures.append(
-            ".md-sidebar--secondary: width must adapt below a quiet 200px cap"
+            ".md-sidebar--secondary: desktop table of contents must be 200px"
+        )
+
+    shown_primary_basis = shown_rules.get(
+        ".md-sidebar--primary", {}
+    ).get("flex")
+    if shown_primary_basis != "0 0 200px":
+        failures.append(
+            ".md-sidebar--primary: use the full 200px width beside the TOC"
+        )
+
+    try:
+        expanded_rules = parse_rules(
+            extract_media_body(css, EXPANDED_LAYOUT_MEDIA)
+        )
+    except ValueError as error:
+        failures.append(str(error))
+        return
+    expanded_secondary = expanded_rules.get(
+        ".md-main__inner > .md-sidebar--secondary:not([hidden])", {}
+    )
+    if expanded_secondary.get("margin-inline-end") != "-200px":
+        failures.append(
+            ".md-sidebar--secondary: wide layouts must hang the 200px TOC "
+            "outside the centered reading cluster"
         )
 
 
@@ -473,6 +535,50 @@ def check_reading_surface(css: str, failures: list[str]) -> None:
                 f"{selector}: navigation states must use semantic gray"
             )
 
+    sidebar_link = rules.get(".md-sidebar .md-nav__link", {})
+    for property_name, value in (
+        ("min-width", "0"),
+        ("cursor", "pointer"),
+        ("white-space", "normal"),
+    ):
+        if sidebar_link.get(property_name) != value:
+            failures.append(
+                ".md-sidebar .md-nav__link: interactive navigation must "
+                f"remain identifiable and single-line ({property_name}: {value})"
+            )
+
+    sidebar_ellipsis = rules.get(
+        ".md-sidebar .md-nav__link > .md-ellipsis", {}
+    )
+    for property_name, value in (
+        ("display", "-webkit-box"),
+        ("overflow", "hidden"),
+        ("overflow-wrap", "break-word"),
+        ("text-overflow", "ellipsis"),
+        ("white-space", "normal"),
+        ("word-break", "normal"),
+        ("-webkit-box-orient", "vertical"),
+        ("-webkit-line-clamp", "2"),
+    ):
+        if sidebar_ellipsis.get(property_name) != value:
+            failures.append(
+                ".md-sidebar .md-ellipsis: long navigation labels must "
+                "wrap between words and stop after two lines "
+                f"({property_name}: {value})"
+            )
+
+    sidebar_title = rules.get(".md-sidebar .md-nav__title", {})
+    for property_name, value in (
+        ("overflow", "hidden"),
+        ("text-overflow", "ellipsis"),
+        ("white-space", "nowrap"),
+    ):
+        if sidebar_title.get(property_name) != value:
+            failures.append(
+                ".md-sidebar .md-nav__title: static navigation labels must "
+                f"remain single-line ({property_name}: {value})"
+            )
+
     try:
         desktop_rules = parse_rules(extract_media_body(css, DESKTOP_LAYOUT_MEDIA))
         secondary_rules = parse_rules(
@@ -498,12 +604,52 @@ def check_reading_surface(css: str, failures: list[str]) -> None:
     for property_name, value in (
         ("background-color", "var(--md-default-bg-color)"),
         ("border-inline-end", "0.05rem solid var(--fog-border)"),
+        ("top", "calc(2.4rem + var(--fog-sidebar-start))"),
+        ("height", "calc(100vh - 2.4rem - var(--fog-sidebar-start))"),
+        ("min-height", "0"),
+        ("margin-block", "var(--fog-sidebar-start) 0"),
+        ("padding-block", "0"),
     ):
         if primary_sidebar.get(property_name) != value:
             failures.append(
                 ".md-sidebar--primary: expected a shared background with one "
                 f"quiet divider ({property_name}: {value})"
             )
+    sidebar_start = desktop_rules.get(".md-main__inner", {}).get(
+        "--fog-sidebar-start"
+    )
+    expected_sidebar_start = (
+        "calc(clamp(2.6rem, 5vw, 4.2rem) + "
+        "clamp(2.16rem, 3.456vw, 2.592rem) + 1rem)"
+    )
+    if sidebar_start != expected_sidebar_start:
+        failures.append(
+            ".md-main__inner: sidebars must remain below the first heading"
+        )
+    tagged_sidebar_start = desktop_rules.get(
+        ".md-main__inner:has(.md-content__inner > .md-tags)", {}
+    ).get("--fog-sidebar-start")
+    expected_tagged_start = "1.95rem"
+    if tagged_sidebar_start != expected_tagged_start:
+        failures.append(
+            ".md-main__inner: tagged pages must align sidebars with the tags"
+        )
+    tagged_reading_surface = desktop_rules.get(
+        ".md-main__inner:has(.md-content__inner > .md-tags) "
+        ".md-content__inner",
+        {},
+    )
+    if tagged_reading_surface.get("padding-block-start") != "1.5rem":
+        failures.append(
+            ".md-content__inner: tagged pages need a compact top offset"
+        )
+    primary_scrollwrap = desktop_rules.get(
+        ".md-sidebar--primary .md-sidebar__scrollwrap", {}
+    )
+    if primary_scrollwrap.get("padding") != "0 0 1.4rem":
+        failures.append(
+            ".md-sidebar--primary: navigation must begin at the h1 top edge"
+        )
     primary_label = desktop_rules.get(
         ".md-sidebar--primary .md-sidebar__inner::before", {}
     )
@@ -511,6 +657,25 @@ def check_reading_surface(css: str, failures: list[str]) -> None:
         failures.append(
             ".md-sidebar--primary: do not inject a redundant 目录 label"
         )
+    primary_title = desktop_rules.get(
+        ".md-sidebar--primary .md-nav--primary > .md-nav__title", {}
+    )
+    if primary_title.get("display") != "none":
+        failures.append(
+            ".md-sidebar--primary: omit the drawer title on desktop"
+        )
+    primary_link = desktop_rules.get(
+        ".md-sidebar--primary .md-nav__link", {}
+    )
+    for property_name, value in (
+        ("color", "var(--md-default-fg-color--lighter)"),
+        ("font-size", "14px"),
+    ):
+        if primary_link.get(property_name) != value:
+            failures.append(
+                ".md-sidebar--primary: interactive links need a distinct "
+                f"readable tier ({property_name}: {value})"
+            )
     primary_hover = desktop_rules.get(
         ".md-sidebar--primary .md-nav__link:hover", {}
     )
@@ -530,12 +695,11 @@ def check_reading_surface(css: str, failures: list[str]) -> None:
         ("color", "var(--md-default-fg-color)"),
         ("font-weight", "600"),
         ("background-color", "transparent"),
-        ("border-radius", "0"),
     ):
         if primary_active.get(property_name) != value:
             failures.append(
-                ".md-sidebar--primary: active navigation must use a plain "
-                f"gray text treatment ({property_name}: {value})"
+                ".md-sidebar--primary: active navigation needs a clear "
+                f"neutral treatment ({property_name}: {value})"
             )
     if "border-inline-start-color" in primary_active:
         failures.append(
@@ -547,13 +711,30 @@ def check_reading_surface(css: str, failures: list[str]) -> None:
     )
     if secondary_title.get("display") != "none":
         failures.append(
-            ".md-sidebar--secondary: omit the redundant visible TOC title"
+            ".md-sidebar--secondary: omit the drawer-style TOC title"
         )
+    secondary_scrollwrap = secondary_rules.get(
+        ".md-sidebar--secondary .md-sidebar__scrollwrap", {}
+    )
+    for property_name, value in (
+        ("box-sizing", "border-box"),
+        ("height", "100%"),
+        ("margin", "0"),
+        ("padding", "0 0 1.4rem 32px"),
+    ):
+        if secondary_scrollwrap.get(property_name) != value:
+            failures.append(
+                ".md-sidebar--secondary: expected Apple-like 32px content gap "
+                f"({property_name}: {value})"
+            )
     secondary_link = secondary_rules.get(
         ".md-sidebar--secondary .md-nav__link", {}
     )
     for property_name, value in (
-        ("font-size", "0.6rem"),
+        ("margin-inline", "0"),
+        ("padding", "0.125rem 0 0.125rem 10px"),
+        ("color", "var(--md-default-fg-color--lighter)"),
+        ("font-size", "12px"),
         ("font-weight", "400"),
         (
             "border-left",
@@ -566,6 +747,13 @@ def check_reading_surface(css: str, failures: list[str]) -> None:
                 ".md-sidebar--secondary: expected a quiet tracked TOC "
                 f"({property_name}: {value})"
             )
+    secondary_list = secondary_rules.get(
+        "[dir] .md-sidebar--secondary .md-nav__list", {}
+    )
+    if secondary_list.get("padding-inline-start") != "0":
+        failures.append(
+            ".md-sidebar--secondary: remove Material's extra list indentation"
+        )
     secondary_hover = secondary_rules.get(
         ".md-sidebar--secondary .md-nav__link:hover", {}
     )
